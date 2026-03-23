@@ -1,105 +1,57 @@
-# Tooth Kingdom Adventure — Website (Frontend)
+# Tooth Kingdom Adventure - Frontend Website
 
-> React + Vite frontend for the Tooth Kingdom Adventure dental health app.  
-> Builds as a website and also as an Android APK via Capacitor.
+This is the React-based frontend for the **Tooth Kingdom Adventure** application. It serves as both the web platform and the source for the Android/iOS mobile apps (via Capacitor).
 
----
+## 🚀 Quick Start
 
-## Tech Stack
+1.  **Install Dependencies:**
+    ```bash
+    npm install
+    ```
 
-| Layer | Technology |
-|---|---|
-| Framework | React 18 + TypeScript |
-| Build Tool | Vite |
-| Styling | TailwindCSS + Custom CSS |
-| UI Components | Radix UI + Lucide Icons |
-| Animations | Framer Motion |
-| Mobile | Capacitor (Android) |
-| Auth | Python Backend (email, phone, Google sign-in) |
-| Charts | Recharts |
+2.  **Configure Environment:**
+    Copy `.env.example` to `.env` and adjust the `VITE_LOCAL_BACKEND_URL` if necessary.
+    ```bash
+    cp .env.example .env
+    ```
 
-## Quick Start
+3.  **Run Development Server:**
+    ```bash
+    npm run dev
+    ```
 
-```bash
-# 1. Install dependencies
-npm install
+## 🛠 Tech Stack
 
-# 2. Create environment file
-cp .env.example .env
+- **Framework:** React 18 with Vite
+- **Language:** TypeScript
+- **Styling:** TailwindCSS
+- **Animations:** Framer Motion
+- **Icons:** Lucide React
+- **Mobile Packaging:** Capacitor
+- **State Management:** React Context (Auth, Game, Sound)
 
-# 3. Start development server
-npm run dev
-```
+## 🔗 Backend Connection
 
-Website runs at **http://localhost:5173**
+The frontend is designed to work exclusively with the **Python FastAPI Backend**.
 
-> **Important:** The Python backend must be running on port 8010 for login, game data, and AI features to work. See the root `README.md` for backend setup.
+- **Auto-Detection:** By default, it attempts to find the backend at `http://localhost:8000` or the current host's IP.
+- **Manual Override:** Set `VITE_LOCAL_BACKEND_URL` in your `.env` file to point to your deployed production backend (e.g., `http://your-college-server-ip:8000`).
 
-## Connecting to the Backend
+## 📦 Build & Deployment
 
-The frontend automatically detects the backend URL:
-
-| Environment | Backend URL |
-|---|---|
-| Local development | `http://localhost:8010` |
-| Android emulator | `http://10.0.2.2:8010` |
-| Production server | Set via `VITE_LOCAL_BACKEND_URL` in `.env` |
-
-To point to your deployed server, add to `.env`:
-```env
-VITE_LOCAL_BACKEND_URL=http://your-server-ip:8010
-```
-
-## Build for Production
-
+To create a production build of the website:
 ```bash
 npm run build
 ```
+The output will be in the `dist/` folder, which can be hosted on any static web server (Nginx, Apache, Vercel, Netlify, etc.).
 
-Output goes to `dist/` — deploy this folder to any static hosting (Netlify, Nginx, Apache, etc.).
+## 📱 Mobile App (Android)
 
-## Project Structure
+This same codebase is used to build the Android app.
+1. `npm run build`
+2. `npx cap sync android`
+3. Open the `android/` project in Android Studio and build the APK/Bundle.
 
-```
-website/
-├── index.html           # Entry HTML
-├── package.json         # Dependencies
-├── vite.config.ts       # Vite configuration
-├── tsconfig.json        # TypeScript config
-├── capacitor.config.ts  # Android/iOS build config
-├── public/              # Static assets (images, sounds, icons)
-└── src/
-    ├── App.tsx          # Main app with routing
-    ├── main.tsx         # React entry point
-    ├── index.css        # Global styles
-    ├── components/      # UI components and screens
-    ├── context/         # Auth + Game state management
-    ├── lib/             # Config and utilities
-    ├── services/        # RPG game service
-    ├── hooks/           # Custom React hooks
-    ├── data/            # Static game data
-    └── assets/          # Embedded assets
-```
+## 🔐 Authentication
 
-## Screens
-
-The app includes 30+ screens covering:
-- **Auth**: Sign-in, OTP verification, onboarding
-- **Dashboard**: Main hub with stats, streaks, quick actions
-- **Game**: Brushing lessons, VTuber quest, chapters, kingdom hub
-- **Progress**: Stats, calendar, achievements, rewards
-- **Social**: Leaderboard, parent dashboard, teacher dashboard
-- **Settings**: Profile, app preferences
-
-## Authentication
-
-All authentication flows go through the **Python backend**:
-- **Email + Password** — register/login via `/auth/register` and `/auth/login`
-- **Phone OTP** — request OTP via `/auth/phone`, verify via `/auth/verify-otp`
-- **Google Sign-In** — handled via `/auth/google` and `/auth/sync`
-
-No external authentication services are required on the server side.
-
-## License
-
-Tooth Kingdom Adventure © 2026
+All authentication flows (Email/Password, Phone OTP, Google) are handled by the Python backend. This version is **Firebase-free** and relies solely on the high-performance Python API.

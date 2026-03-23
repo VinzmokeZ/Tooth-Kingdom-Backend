@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { ScreenProps } from './types';
-import { Menu, Bell, Star, BookOpen, ChevronRight, Play, ShoppingBag, Flame, Bot, Home, TrendingUp, Shield, Heart, Target, Sparkles, Check, Coins, Wand2 } from 'lucide-react';
+import { Menu, Bell, Star, BookOpen, ChevronRight, Play, ShoppingBag, Flame, Bot, Home, TrendingUp, Shield, Heart, Target, Sparkles, Check, Coins, Wand2, ArrowLeft, Video, X } from 'lucide-react';
 import { UserAvatar } from '../common/UserAvatar';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth, API_URL } from '../../context/AuthContext';
 import { ACADEMY_COURSES } from '../../data/learningContent';
+import { Browser } from '@capacitor/browser';
+import { useSound } from '../../hooks/useSound';
 // Removed NotificationOverlay as we are switching to dedicated Screen
 
 export function DashboardScreen({ navigateTo, userData, updateUserData }: ScreenProps) {
@@ -20,6 +23,9 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
   const [currentTip, setCurrentTip] = useState(AI_TIPS[0]);
   const [isAnimatingTip, setIsAnimatingTip] = useState(false);
   const [showRewardAnimation, setShowRewardAnimation] = useState<{ type: 'xp' | 'health', amount: number } | null>(null);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
+
+  const { playSound } = useSound();
 
   // Carousel State for Learning Academy
   const recommendedCourses = ACADEMY_COURSES.filter(c => c.aiRecommended);
@@ -60,6 +66,42 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
 
     return () => clearInterval(timer);
   }, [currentCourseIndex, recommendedCourses.length]);
+
+  // --- v4.0.8: Notification Polling with Logcat Debugging ---
+  React.useEffect(() => {
+    if (!userData.uid || userData.uid === 'undefined') {
+      console.log("[POLLER] No valid UID, skipping poll.");
+      return;
+    }
+
+    const pollNotifications = async () => {
+      try {
+        console.log(`[POLLER] Fetching notifications for UID: ${userData.uid}`);
+        const res = await fetch(`${API_URL}/users/${userData.uid}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        
+        const data = await res.json();
+        if (data.success && data.userData?.notifications) {
+          const currentCount = (userData.notifications || []).length;
+          const newCount = data.userData.notifications.length;
+          
+          if (newCount !== currentCount) {
+             console.log(`[POLLER] New notifications found! (${currentCount} -> ${newCount})`);
+             updateUserData({ notifications: data.userData.notifications });
+          } else {
+             console.log("[POLLER] No change in notifications.");
+          }
+        }
+      } catch (err) {
+        console.error("[POLLER] background fetch failed:", err);
+      }
+    };
+
+    const interval = setInterval(pollNotifications, 10000); // 10 seconds
+    pollNotifications(); // Initial check
+
+    return () => clearInterval(interval);
+  }, [userData.uid, API_URL]);
 
   const getNewTip = () => {
     setIsAnimatingTip(true);
@@ -182,6 +224,54 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 py-6 space-y-6 touch-pan-y overscroll-contain relative z-10 native-scroll-fix bg-transparent" 
            id="dashboard-scroll-area"
            style={{ WebkitOverflowScrolling: 'touch', flex: '1 1 auto' }}>
+        
+        {/* INLINE VIDEO PLAYER (Top-of-Feed) - Matching User Request */}
+        <AnimatePresence>
+          {selectedVideoUrl && (
+            <motion.div
+              initial={{ height: 0, opacity: 0, marginBottom: 0 }}
+              animate={{ height: 'auto', opacity: 1, marginBottom: 24 }}
+              exit={{ height: 0, opacity: 0, marginBottom: 0 }}
+              className="overflow-visible"
+            >
+              <div className="w-full bg-white rounded-[2rem] shadow-[0_15px_45px_rgba(0,0,0,0.2)] border-4 border-white relative flex flex-col group">
+                {/* Compact Branded Header (Stacked) */}
+                <div className="bg-gradient-to-r from-purple-600 to-pink-500 px-5 py-4 flex items-center justify-between overflow-hidden rounded-t-[1.7rem]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center border border-white/20">
+                      <Video className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[10px] font-black text-purple-100 uppercase tracking-widest leading-none mb-1">Featured Lesson</p>
+                      <p className="text-white font-black text-sm md:text-lg truncate max-w-[150px] md:max-w-sm">
+                        {ACADEMY_COURSES.find(c => c.url === selectedVideoUrl)?.title || "Premium Lesson"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Circular Back Button (On the Right) - THE ONLY CLOSE BUTTON */}
+                  <button
+                    onClick={() => setSelectedVideoUrl(null)}
+                    className="w-11 h-11 rounded-full bg-white/30 hover:bg-white/40 flex items-center justify-center transition-all active:scale-95 border border-white/20 shadow-inner"
+                  >
+                     <ArrowLeft className="w-6 h-6 text-white" />
+                  </button>
+                </div>
+
+                {/* Video Area (High Stability) */}
+                <div className="w-full bg-black relative flex items-center justify-center overflow-hidden rounded-b-[1.7rem]" style={{ aspectRatio: '16/9', minHeight: '210px' }}>
+                  <iframe
+                    src={`${selectedVideoUrl}${selectedVideoUrl.includes('?') ? '&' : '?'}autoplay=1&modestbranding=1&rel=0`}
+                    className="absolute inset-0 w-full h-full border-none"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* PRIMARY FOCUS: Learning Academy (Dynamic AI Carousel - Refined) */}
         <div className="pt-4">
           <h3 className="font-black text-gray-400 tracking-widest uppercase text-[10px] mb-4 px-1">Learning Academy</h3>
@@ -192,19 +282,33 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
                 className="w-full bg-white dark:bg-black/20 rounded-[2.5rem] overflow-hidden shadow-2xl border border-purple-100 dark:border-transparent group transition-all backdrop-blur-sm"
               >
                 <div
-                  onClick={() => window.open(featuredCourse.url, '_blank')}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (featuredCourse.url.includes('nocookie')) {
+                      setSelectedVideoUrl(featuredCourse.url);
+                      playSound('click');
+                    } else if (featuredCourse.url.includes('.pdf') || featuredCourse.url.includes('mouthhealthy.org')) {
+                      Browser.open({ 
+                        url: featuredCourse.url,
+                        toolbarColor: '#8b5cf6',
+                      });
+                    } else {
+                      window.open(featuredCourse.url, '_blank');
+                    }
+                  }}
                   className="relative h-48 overflow-hidden bg-gray-900 cursor-pointer active:scale-[0.98] transition-all"
                 >
                   {/* Background (Previous) Image */}
                   <img
-                    src={recommendedCourses[currentCourseIndex].thumbnail}
+                    src={recommendedCourses[currentCourseIndex]?.thumbnail || '/thumbnails/tooth_kingdom_bg.png'}
                     alt="Current"
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                   />
 
                   {/* Foreground (Next) Image Layer */}
                   <img
-                    src={recommendedCourses[nextCourseIndex].thumbnail}
+                    src={recommendedCourses[nextCourseIndex]?.thumbnail || '/thumbnails/tooth_kingdom_bg.png'}
                     alt="Next"
                     className={`absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-all duration-1000 ${isCarouselTransitioning ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}
                   />
@@ -215,10 +319,10 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
                         <span className="bg-cyan-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">New Lesson</span>
                       </div>
                       <h3 className="text-white font-black text-xl leading-tight mb-1 drop-shadow-md">
-                        {featuredCourse.title}
+                        {featuredCourse?.title || "Welcome to Tooth Kingdom"}
                       </h3>
                       <p className="text-white/90 text-xs font-bold line-clamp-1">
-                        {featuredCourse.description}
+                        {featuredCourse?.description || "Start your dental adventure today!"}
                       </p>
                     </div>
                   </div>
@@ -236,7 +340,7 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
                     </div>
                     <div className={`transition-all duration-500 ${isCarouselTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
                       <p className="text-[10px] font-black text-purple-600/50 dark:text-purple-300/50 uppercase tracking-widest">Master Class</p>
-                      <p className="text-xs font-black text-gray-900 dark:text-white">{featuredCourse.lessons} Interactive Lessons</p>
+                      <p className="text-xs font-black text-gray-900 dark:text-white">{featuredCourse?.lessons || 0} Interactive Lessons</p>
                     </div>
                   </div>
                   <ChevronRight className="w-6 h-6 text-purple-600 dark:text-purple-400 transform group-hover:translate-x-1 transition-transform" />
@@ -525,6 +629,16 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
           </div>
         </div>
       </div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      ` }} />
     </div>
   );
 }

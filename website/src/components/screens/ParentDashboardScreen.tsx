@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedBackground } from '../AnimatedBackground';
 
 // ─── HOME TAB ──────────────────────────────────────────────────────
-function ParentHomeTab({ userData, navigateTo, displayChild }: any) {
+function ParentHomeTab({ userData, navigateTo, displayChild, currentUser }: any) {
     const [currentTip, setCurrentTip] = useState("Great job! Your child brushed consistently this week. Try scheduling a 'Duo Brushing' tonight to keep the streak alive!");
     const [isAnimatingTip, setIsAnimatingTip] = useState(false);
 
@@ -133,8 +133,14 @@ function ParentHomeTab({ userData, navigateTo, displayChild }: any) {
                             </button>
                             <button 
                                 onClick={async () => {
-                                    const sender = userData.uid || 'parent_1';
-                                    const receiver = displayChild?.uid || userData.uid || 'hero_2';
+                                    const sender = currentUser?.uid || userData.uid;
+                                    const receiver = displayChild?.uid;
+                                    
+                                    if (!sender || !receiver) {
+                                        alert('Could not identify accounts. Please try linking your child first.');
+                                        return;
+                                    }
+
                                     await fetch(`${API_URL}/reminders/send`, {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
@@ -410,7 +416,7 @@ export function ParentDashboardScreen({ navigateTo, userData }: ScreenProps) {
             {/* ── SCROLLABLE CONTENT ── */}
             <div className="flex-1 overflow-y-auto no-scrollbar px-5 py-6 relative z-10 w-full">
                 <div className="max-w-7xl mx-auto w-full">
-                    {activeTab === 'home' && <ParentHomeTab userData={userData} navigateTo={navigateTo} displayChild={displayChild} />}
+                    {activeTab === 'home' && <ParentHomeTab userData={userData} navigateTo={navigateTo} displayChild={displayChild} currentUser={currentUser} />}
                     {activeTab === 'progress' && <ParentProgressTab userData={userData} navigateTo={navigateTo} />}
                     {activeTab === 'alerts' && <ParentAlertsTab userData={userData} navigateTo={navigateTo} />}
                 </div>

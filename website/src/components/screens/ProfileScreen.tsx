@@ -35,6 +35,8 @@ export function ProfileScreen({ navigateTo, userData, updateUserData }: ScreenPr
 
   // Local edit state
   const [editName, setEditName] = React.useState(userData.name || 'Tooth Defender');
+  const [editEmail, setEditEmail] = React.useState(userData.email || '');
+  const [editPhone, setEditPhone] = React.useState(userData.phone || '');
   const [editSettings, setEditSettings] = React.useState(userData.settings || { darkMode: false, notifications: true, sound: true });
 
   const isDarkMode = userData.settings?.darkMode || false;
@@ -52,17 +54,32 @@ export function ProfileScreen({ navigateTo, userData, updateUserData }: ScreenPr
   const [isSaving, setIsSaving] = React.useState(false);
   const [showSuccess, setShowSuccess] = React.useState(false);
 
-  const confirmSave = () => {
+  const confirmSave = async () => {
     setIsSaving(true);
+    const API_URL = (window as any).API_URL || "http://localhost:8010";
 
-    // Simulate network delay for better UX
-    setTimeout(() => {
+    try {
+      // 1. Sync with backend
+      const res = await fetch(`${API_URL}/users/${userData.uid}/profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editName,
+          email: editEmail,
+          phone: editPhone
+        })
+      });
+
+      if (!res.ok) throw new Error("Backend update failed");
+
+      // 2. Update local state
       updateUserData({
         name: editName,
+        email: editEmail,
+        phone: editPhone,
         settings: editSettings
       });
 
-      setIsSaving(false);
       setShowSuccess(true);
       setShowConfirm(false);
 
@@ -71,7 +88,12 @@ export function ProfileScreen({ navigateTo, userData, updateUserData }: ScreenPr
         setShowSuccess(false);
         setIsEditing(false);
       }, 1500);
-    }, 800);
+    } catch (err) {
+      console.error("Profile save error:", err);
+      alert("Failed to save profile. Please check your internet connection.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const toggleSetting = (key: keyof typeof editSettings) => {
@@ -467,6 +489,34 @@ export function ProfileScreen({ navigateTo, userData, updateUserData }: ScreenPr
                               placeholder="Enter hero name..."
                             />
                             <Edit2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400 opacity-50" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className={`text-xs font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Contact Email</label>
+                          <div className="relative group">
+                            <input
+                              type="email"
+                              value={editEmail}
+                              onChange={(e) => setEditEmail(e.target.value)}
+                              className={`w-full bg-transparent border-2 rounded-2xl p-4 font-bold outline-none transition-all ${isDarkMode ? 'border-slate-800 focus:border-purple-500 text-white' : 'border-gray-100 focus:border-purple-500 text-gray-900'}`}
+                              placeholder="Add email to link account..."
+                            />
+                            <Bot className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 opacity-50" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className={`text-xs font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Link Phone Number</label>
+                          <div className="relative group">
+                            <input
+                              type="tel"
+                              value={editPhone}
+                              onChange={(e) => setEditPhone(e.target.value)}
+                              className={`w-full bg-transparent border-2 rounded-2xl p-4 font-bold outline-none transition-all ${isDarkMode ? 'border-slate-800 focus:border-purple-500 text-white' : 'border-gray-100 focus:border-purple-500 text-gray-900'}`}
+                              placeholder="Enter phone to merge accounts..."
+                            />
+                            <Bot className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-green-400 opacity-50" />
                           </div>
                         </div>
 

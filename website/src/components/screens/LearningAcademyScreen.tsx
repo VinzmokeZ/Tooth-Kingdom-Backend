@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { ScreenProps } from './types';
-import { ArrowLeft, BookOpen, Video, FileText, Download, Play, Star, Users, Baby, GraduationCap, Search, Sparkles, Bot, Award, Clock, CheckCircle, Lock, Bookmark, TrendingUp, Brain, Zap, Globe } from 'lucide-react';
+import { ArrowLeft, BookOpen, Video, FileText, Download, Play, Star, Users, Baby, GraduationCap, Search, Sparkles, Bot, Award, Clock, CheckCircle, Lock, Bookmark, TrendingUp, Brain, Zap, Globe, X } from 'lucide-react';
 import { ACADEMY_COURSES, ACADEMY_PDFS, Course, PDFResource } from '../../data/learningContent';
 import { getAIChatResponse } from '../../utils/aiMockService';
 import { AnimatedBackground } from '../AnimatedBackground';
+import { Browser } from '@capacitor/browser';
+import { useSound } from '../../hooks/useSound';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
   const [activeTab, setActiveTab] = useState<'courses' | 'pdfs' | 'mylearning' | 'ai-tutor'>('courses');
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'kids' | 'parents' | 'teachers'>('all');
   const [showAITutor, setShowAITutor] = useState(false);
@@ -23,8 +27,25 @@ export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
     }
   ]);
 
-  const openResource = (url: string) => {
-    window.open(url, '_blank');
+  const { playSound } = useSound();
+
+  const openResource = async (url: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (url.includes('nocookie')) {
+      setSelectedVideoUrl(url);
+      playSound('click');
+    } else if (url.includes('.pdf') || url.includes('mouthhealthy.org') || url.includes('crayola.com') || url.includes('education.com') || url.includes('ada.org')) {
+      // PDF or External Article -> Use In-App Browser for safety
+      await Browser.open({ 
+        url,
+        toolbarColor: '#8b5cf6'
+      });
+    } else {
+      window.open(url, '_blank');
+    }
   };
 
   // ... inside component ...
@@ -182,27 +203,31 @@ export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
                       {courses.filter(c => c.isFeatured).map((course) => (
                         <div
                           key={course.id}
-                          className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl p-4 transition-all cursor-pointer hover-float active-pop"
+                          onClick={(e) => openResource(course.url, e)}
+                          className="bg-white border-2 border-purple-200 rounded-2xl p-4 transition-all cursor-pointer hover:border-purple-400 group active-pop shadow-sm hover:shadow-md"
                         >
                           <div className="flex gap-3">
-                            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl overflow-hidden flex-shrink-0">
-                              <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                            <div className="w-16 h-16 bg-purple-100 rounded-2xl overflow-hidden flex-shrink-0 relative">
+                              <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                              <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                <Play className="w-6 h-6 text-white" />
+                              </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-gray-900 dark:text-white leading-tight mb-1 line-clamp-2">{course.title}</h3>
-                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                                <span>{course.instructor}</span>
-                                <span>•</span>
-                                <span>{course.duration}</span>
+                              <h3 className="font-bold text-gray-900 leading-tight mb-1 line-clamp-2 group-hover:text-purple-600">{course.title}</h3>
+                              <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-2">
+                                <span className="font-bold text-purple-600">{course.instructor}</span>
+                                <span className="text-gray-300">•</span>
+                                <span className="bg-gray-100 px-2 py-0.5 rounded-full">{course.duration}</span>
                               </div>
-                              <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{course.description}</p>
+                              <p className="text-[10px] text-gray-500 line-clamp-2 leading-tight">{course.description}</p>
                               {course.progress !== undefined && course.progress > 0 && (
                                 <div className="mt-2">
-                                  <div className="flex items-center justify-between text-xs mb-1">
-                                    <span className="text-gray-600">Progress</span>
+                                  <div className="flex items-center justify-between text-[10px] mb-1">
+                                    <span className="text-gray-400">Progress</span>
                                     <span className="font-bold text-purple-600">{course.progress}%</span>
                                   </div>
-                                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                     <div
                                       className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
                                       style={{ width: `${course.progress}%` }}
@@ -236,15 +261,19 @@ export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
                       {courses.filter(c => c.aiRecommended).slice(0, 4).map((course) => (
                         <div
                           key={course.id}
-                          className="bg-gradient-to-br from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-2xl p-3 transition-all cursor-pointer hover-float active-pop"
+                          onClick={(e) => openResource(course.url, e)}
+                          className="bg-white border-2 border-cyan-100 rounded-2xl p-3 transition-all cursor-pointer hover:border-cyan-400 group active-pop shadow-sm"
                         >
-                          <div className="w-full h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl overflow-hidden mb-2">
-                            <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                          <div className="w-full h-20 bg-cyan-50 rounded-xl overflow-hidden mb-2 relative">
+                            <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                            <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                              <Play className="w-5 h-5 text-white" />
+                            </div>
                           </div>
-                          <h4 className="font-extrabold text-xs text-gray-900 dark:text-white mb-1 line-clamp-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                          <h4 className="font-bold text-[10px] text-gray-900 mb-1 line-clamp-2 group-hover:text-cyan-600">
                             {course.title}
                           </h4>
-                          <div className="flex items-center gap-1 text-xs text-gray-600">
+                          <div className="flex items-center gap-1 text-[9px] text-gray-500">
                             <Video className="w-3 h-3" />
                             <span>{course.lessons} lessons</span>
                           </div>
@@ -265,7 +294,7 @@ export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
                   {filteredCourses.map((course) => (
                     <div
                       key={course.id}
-                      onClick={() => openResource(course.url)}
+                      onClick={(e) => openResource(course.url, e)}
                       className="bg-white rounded-2xl shadow-lg p-5 transition-all cursor-pointer border-2 border-transparent hover:border-purple-300 group hover-float active-pop"
                     >
                       <div className="flex gap-4">
@@ -346,7 +375,7 @@ export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
                       {downloadedPDFs.map((pdf) => (
                         <div
                           key={pdf.id}
-                          onClick={() => openResource(pdf.url)}
+                          onClick={(e) => openResource(pdf.url, e)}
                           className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-3 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden animate-float [animation-delay:0.1s]"
                         >
                           <div className="w-12 h-12 mb-2 group-hover:scale-110 transition-transform duration-300 rounded-xl overflow-hidden">
@@ -387,7 +416,7 @@ export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
                       {pdfResources.filter(p => p.aiRecommended).map((pdf) => (
                         <div
                           key={pdf.id}
-                          onClick={() => openResource(pdf.url)}
+                          onClick={(e) => openResource(pdf.url, e)}
                           className="bg-gradient-to-br from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-2xl p-3 hover:shadow-lg transition-all cursor-pointer group flex items-center gap-3 relative overflow-hidden"
                         >
                           <div className="w-12 h-12 flex-shrink-0 group-hover:scale-110 transition-transform rounded-xl overflow-hidden">
@@ -420,7 +449,7 @@ export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
                   {filteredPDFs.map((pdf) => (
                     <div
                       key={pdf.id}
-                      onClick={() => openResource(pdf.url)}
+                      onClick={(e) => openResource(pdf.url, e)}
                       className="glass-card rounded-2xl shadow-md p-5 hover:shadow-xl transition-all cursor-pointer border-2 border-transparent hover:border-purple-300 group hover:-translate-y-1 animate-float [animation-delay:0.2s]"
                     >
                       <div className="flex gap-4">
@@ -512,7 +541,7 @@ export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
                   {myLearningCourses.map((course) => (
                     <div
                       key={course.id}
-                      onClick={() => openResource(course.url)}
+                      onClick={(e) => openResource(course.url, e)}
                       className="bg-white rounded-2xl shadow-lg p-5 hover:shadow-xl transition-all cursor-pointer border-2 border-transparent hover:border-purple-300 group"
                     >
                       <div className="flex gap-4">
@@ -557,7 +586,7 @@ export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
                   {downloadedPDFs.map((pdf) => (
                     <div
                       key={pdf.id}
-                      onClick={() => openResource(pdf.url)}
+                      onClick={(e) => openResource(pdf.url, e)}
                       className="bg-white rounded-2xl shadow-lg p-4 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden border-2 border-transparent hover:border-green-300"
                     >
                       <div className="w-16 h-16 mb-2 group-hover:scale-110 transition-transform duration-300 rounded-2xl overflow-hidden">
@@ -684,6 +713,65 @@ export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
         </div>
       </div>
 
+      {/* Refined Classic Video Modal (White Frame, No Cropping) */}
+      <AnimatePresence>
+        {selectedVideoUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-[#0a0a0f]/95 backdrop-blur-sm z-[2000] flex items-center justify-center p-4 md:p-10"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setSelectedVideoUrl(null);
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-4xl bg-white rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.5)] border-4 border-white relative flex flex-col mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+
+              {/* Compact Branded Header (Stacked) */}
+              <div className="bg-gradient-to-r from-purple-600 to-pink-500 px-5 py-4 flex items-center justify-between overflow-hidden rounded-t-[1.7rem]">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center border border-white/20">
+                    <Video className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] font-black text-purple-100 uppercase tracking-widest leading-none mb-1">Learning Academy</p>
+                    <p className="text-white font-black text-sm md:text-lg truncate max-w-[150px] md:max-w-md">
+                      {ACADEMY_COURSES.find(c => c.url === selectedVideoUrl)?.title || "Premium Lesson"}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* User Image Style: Circular Back Button on Right */}
+                <button
+                  onClick={() => setSelectedVideoUrl(null)}
+                  className="w-10 h-10 rounded-full bg-white/30 hover:bg-white/40 flex items-center justify-center transition-all active:scale-95 border border-white/20 shadow-inner"
+                >
+                   <ArrowLeft className="w-6 h-6 text-white" />
+                </button>
+              </div>
+
+              {/* Video Area (Explicit min-height to prevent crushing) */}
+              <div className="w-full bg-black relative flex items-center justify-center overflow-hidden rounded-b-[1.7rem]" style={{ aspectRatio: '16/9', minHeight: '220px' }}>
+                <iframe
+                  src={`${selectedVideoUrl}${selectedVideoUrl.includes('?') ? '&' : '?'}autoplay=1&modestbranding=1&rel=0`}
+                  className="absolute inset-0 w-full h-full border-none"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <style dangerouslySetInnerHTML={{
         __html: `
         .line-clamp-2 {
@@ -691,6 +779,14 @@ export function LearningAcademyScreen({ navigateTo, userData }: ScreenProps) {
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
+        }
+        @keyframes pop-in {
+          0% { transform: scale(0.9); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fade-in {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
         }
       ` }} />
     </div >

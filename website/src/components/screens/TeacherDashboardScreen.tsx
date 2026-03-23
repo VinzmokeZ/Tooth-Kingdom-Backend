@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ScreenProps } from './types';
-import { GraduationCap, Bell, Settings, LogOut, Flame, Star, TrendingUp, Sparkles, Bot, Wand2, Home, BarChart2, Users, ClipboardList, Trophy, ChevronRight, Check, Plus, Search, X } from 'lucide-react';
+import { GraduationCap, Bell, Settings, LogOut, Flame, Star, TrendingUp, Sparkles, Bot, Wand2, Home, BarChart2, Users, ClipboardList, Trophy, ChevronRight, Check, Plus, Search, X, Edit2 } from 'lucide-react';
 import { useAuth, API_URL } from '../../context/AuthContext';
 import { UserAvatar } from '../common/UserAvatar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedBackground } from '../AnimatedBackground';
 
 // ─── HOME TAB ──────────────────────────────────────────────────────
-function TeacherHomeTab({ userData, navigateTo, setSelectedStudent, displayStudents }: any) {
+function TeacherHomeTab({ userData, navigateTo, setSelectedStudent, displayStudents, currentUser, onEdit }: any) {
     const [currentTip, setCurrentTip] = useState("Your class averaged a 92% Enamel Health score this week — phenomenal! Consider adding a 'Class Shield' reward next Monday.");
     const [isAnimatingTip, setIsAnimatingTip] = useState(false);
 
@@ -85,22 +85,58 @@ function TeacherHomeTab({ userData, navigateTo, setSelectedStudent, displayStude
                                     <span className={`text-[10px] font-black uppercase tracking-widest ${student.health >= 80 ? 'text-emerald-500' : student.health >= 50 ? 'text-orange-500' : 'text-red-500'}`}>{student.health}% HP</span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onEdit) onEdit(student);
+                                    }}
+                                    className="w-9 h-9 bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-600 rounded-xl transition-all flex items-center justify-center shadow-sm active-pop"
+                                    title="Edit Student"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                </button>
                                 <button 
                                     onClick={async (e) => {
                                         e.stopPropagation();
-                                        const sender = userData.uid || 'teacher_1';
+                                        const sender = currentUser?.uid || userData.uid;
                                         const receiver = student.uid || student.id;
                                         await fetch(`${API_URL}/reminders/send`, {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ sender_uid: sender, receiver_uid: receiver, message: 'Your teacher says: Time for a Kingdom Brush! 🦷⚔️' })
+                                            body: JSON.stringify({ 
+                                                sender_uid: sender, 
+                                                receiver_uid: receiver, 
+                                                message: 'Your teacher says: Time for a Kingdom Brush! 🦷⚔️',
+                                                type: 'reminder'
+                                            })
                                         });
                                         alert(`Reminder sent to ${student.name}!`);
                                     }}
-                                    className="w-10 h-10 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-xl transition-all duration-300 flex items-center justify-center shadow-sm active-pop group/remind"
+                                    className="w-9 h-9 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-xl transition-all flex items-center justify-center shadow-sm active-pop group/remind"
+                                    title="Send Nudge"
                                 >
                                     <Bell className="w-4 h-4 group-hover/remind:animate-bounce" />
+                                </button>
+                                <button 
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        if (!window.confirm(`Are you sure you want to remove ${student.name} from your class?`)) return;
+                                        const teacherUid = currentUser?.uid || userData.uid;
+                                        const studentUid = student.uid || student.id;
+                                        try {
+                                            const res = await fetch(`${API_URL}/relations/${teacherUid}/${studentUid}`, { method: 'DELETE' });
+                                            if (res.ok) {
+                                                alert('Student removed successfully.');
+                                                if (setSelectedStudent) setSelectedStudent(null); 
+                                                window.dispatchEvent(new CustomEvent('refresh-students'));
+                                            }
+                                        } catch (err) { alert('Failed to remove student.'); }
+                                    }}
+                                    className="w-9 h-9 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 rounded-xl transition-all flex items-center justify-center shadow-sm active-pop"
+                                    title="Remove Student"
+                                >
+                                    <X className="w-4 h-4" />
                                 </button>
                                 <ChevronRight className="w-5 h-5 text-gray-300 flex-shrink-0 group-hover:text-blue-500 transition-colors" />
                             </div>
@@ -227,7 +263,7 @@ function TeacherAnalyticsTab({ displayStudents }: any) {
 }
 
 // ─── STUDENTS TAB ──────────────────────────────────────────────────
-function TeacherStudentsTab({ navigateTo, setSelectedStudent, displayStudents, userData, refreshStudents }: any) {
+function TeacherStudentsTab({ navigateTo, setSelectedStudent, displayStudents, userData, refreshStudents, onEdit }: any) {
     const { currentUser } = useAuth();
     const [showAddModal, setShowAddModal] = useState(false);
     const [identifier, setIdentifier] = useState('');
@@ -368,22 +404,57 @@ function TeacherStudentsTab({ navigateTo, setSelectedStudent, displayStudents, u
                                 <div className={`h-full rounded-full transition-all ${student.health >= 80 ? 'bg-emerald-500' : student.health >= 50 ? 'bg-orange-400' : 'bg-red-500'}`} style={{ width: `${student.health}%` }} />
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                             <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onEdit) onEdit(student);
+                                }}
+                                className="w-9 h-9 bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-600 rounded-xl transition-all flex items-center justify-center shadow-sm active-pop"
+                                title="Edit Student"
+                            >
+                                <Edit2 className="w-4 h-4" />
+                            </button>
                              <button 
                                 onClick={async (e) => {
                                     e.stopPropagation();
-                                    const sender = userData.uid || 'teacher_1';
+                                    const sender = currentUser?.uid || userData.uid;
                                     const receiver = student.uid || student.id;
                                     await fetch(`${API_URL}/reminders/send`, {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ sender_uid: sender, receiver_uid: receiver, message: 'Your teacher says: Time for a Kingdom Brush! 🦷⚔️' })
+                                        body: JSON.stringify({ 
+                                            sender_uid: sender, 
+                                            receiver_uid: receiver, 
+                                            message: 'Your teacher says: Time for a Kingdom Brush! 🦷⚔️',
+                                            type: 'reminder'
+                                        })
                                     });
                                     alert(`Reminder sent to ${student.name}!`);
                                 }}
-                                className="w-10 h-10 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-xl transition-all duration-300 flex items-center justify-center shadow-sm active-pop group/remind"
+                                className="w-9 h-9 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-xl transition-all flex items-center justify-center shadow-sm active-pop group/remind"
+                                title="Send Nudge"
                             >
                                 <Bell className="w-4 h-4 group-hover/remind:animate-bounce" />
+                            </button>
+                            <button 
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (!window.confirm(`Are you sure you want to remove ${student.name} from your class?`)) return;
+                                    const teacherUid = currentUser?.uid || userData.uid;
+                                    const studentUid = student.uid || student.id;
+                                    try {
+                                        const res = await fetch(`${API_URL}/relations/${teacherUid}/${studentUid}`, { method: 'DELETE' });
+                                        if (res.ok) {
+                                            alert('Student removed successfully.');
+                                            if (refreshStudents) refreshStudents();
+                                        }
+                                    } catch (err) { alert('Failed to remove student.'); }
+                                }}
+                                className="w-9 h-9 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 rounded-xl transition-all flex items-center justify-center shadow-sm active-pop"
+                                title="Remove Student"
+                            >
+                                <X className="w-4 h-4" />
                             </button>
                             <ChevronRight className="w-5 h-5 text-gray-300 flex-shrink-0 group-hover:text-blue-500 transition-colors" />
                         </div>
@@ -399,6 +470,9 @@ export function TeacherDashboardScreen({ navigateTo, userData, setSelectedStuden
     const { signOut, currentUser } = useAuth();
     const [activeTab, setActiveTab] = useState<'home' | 'students' | 'analytics' | 'settings'>('home');
     const [students, setStudents] = useState<any[]>([]);
+    const [editingStudent, setEditingStudent] = useState<any>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editForm, setEditForm] = useState({ name: '', email: '', phone: '' });
 
     const handleSignOut = async () => { await signOut(); navigateTo('signin'); };
     const handleSettings = () => navigateTo('settings');
@@ -431,7 +505,45 @@ export function TeacherDashboardScreen({ navigateTo, userData, setSelectedStuden
 
     useEffect(() => {
         fetchStudents();
+        // Add listener for custom refresh event
+        const handleRefresh = () => fetchStudents();
+        window.addEventListener('refresh-students', handleRefresh);
+        return () => {
+            window.removeEventListener('refresh-students', handleRefresh);
+        };
     }, [currentUser?.uid]);
+
+    const handleEditStudent = (student: any) => {
+        setEditingStudent(student);
+        setEditForm({ 
+            name: student.name || '', 
+            email: student.email || '', 
+            phone: student.phone || '' 
+        });
+    };
+
+    const handleSaveStudent = async () => {
+        if (!editingStudent) return;
+        setIsSaving(true);
+        try {
+            const res = await fetch(`${API_URL}/users/${editingStudent.uid}/profile`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editForm)
+            });
+            if (res.ok) {
+                alert('Student profile updated and accounts merged if necessary! 🎉');
+                setEditingStudent(null);
+                fetchStudents();
+            } else {
+                alert('Failed to update student.');
+            }
+        } catch (err) {
+            alert('Error updating student.');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     // Show mock data if no real students yet — so teacher can see what it looks like
     const displayStudents = students.length > 0 ? students : MOCK_STUDENTS;
@@ -501,10 +613,68 @@ export function TeacherDashboardScreen({ navigateTo, userData, setSelectedStuden
             {/* ── SCROLLABLE CONTENT ── */}
             <div className="flex-1 overflow-y-auto no-scrollbar px-5 py-6 relative z-10 w-full">
                 <div className="max-w-7xl mx-auto w-full">
-                    {activeTab === 'home' && <TeacherHomeTab userData={userData} navigateTo={navigateTo} setSelectedStudent={setSelectedStudent} displayStudents={displayStudents} />}
-                    {activeTab === 'students' && <TeacherStudentsTab userData={userData} navigateTo={navigateTo} setSelectedStudent={setSelectedStudent} displayStudents={displayStudents} refreshStudents={fetchStudents} />}
+                    {activeTab === 'home' && <TeacherHomeTab userData={userData} navigateTo={navigateTo} setSelectedStudent={setSelectedStudent} displayStudents={displayStudents} currentUser={currentUser} onEdit={handleEditStudent} />}
+                    {activeTab === 'students' && <TeacherStudentsTab userData={userData} navigateTo={navigateTo} setSelectedStudent={setSelectedStudent} displayStudents={displayStudents} refreshStudents={fetchStudents} onEdit={handleEditStudent} />}
                     {activeTab === 'analytics' && <TeacherAnalyticsTab userData={userData} navigateTo={navigateTo} displayStudents={displayStudents} />}
                 </div>
+
+                {/* Edit Student Modal */}
+                <AnimatePresence>
+                    {editingStudent && (
+                        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-6">
+                            <motion.div 
+                                initial={{ scale: 0.9, opacity: 0 }} 
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-blue-100"
+                            >
+                                <h2 className="text-2xl font-black text-gray-900 mb-4">Edit Hero Profile</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Champion Name</label>
+                                        <input 
+                                            type="text"
+                                            value={editForm.name}
+                                            onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                                            className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 font-bold outline-none focus:border-purple-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Assign Email (Triggers Identity Merge)</label>
+                                        <input 
+                                            type="email"
+                                            value={editForm.email}
+                                            onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                                            placeholder="hero@kingdom.com"
+                                            className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 font-bold outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Assign Phone</label>
+                                        <input 
+                                            type="tel"
+                                            value={editForm.phone}
+                                            onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                                            placeholder="9080764317"
+                                            className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 font-bold outline-none focus:border-green-500"
+                                        />
+                                    </div>
+                                    <div className="flex gap-3 pt-4">
+                                        <button onClick={() => setEditingStudent(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 font-black rounded-2xl text-[10px] uppercase tracking-widest">Cancel</button>
+                                        <button 
+                                            onClick={handleSaveStudent} 
+                                            disabled={isSaving}
+                                            className="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200"
+                                        >
+                                            {isSaving ? 'Saving...' : 'Save Profile'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
                 <div className="pb-24" />
             </div>
 

@@ -27,14 +27,22 @@ const onboardingSteps = [
 export function OnboardingScreen({ navigateTo }: ScreenProps) {
   const { userData, updateUserData } = useGame();
 
+  // Safety check to prevent white screen if context is not ready
+  if (!userData) {
+    console.warn('[SCREEN] OnboardingScreen - userData is missing, waiting...');
+    return <div className="flex-1 h-full w-full bg-white flex items-center justify-center p-8 text-gray-400 font-bold">Loading Hero Kingdom...</div>;
+  }
+
   // Determine if we need to show the Name Entry screen
   // If name is one of the defaults, we force the user to enter a name
   const defaults = ['Champion', 'Hero', 'Mobile Hero'];
-  const [showNameScreen, setShowNameScreen] = useState(defaults.includes(userData.name || ''));
+  const [showNameScreen, setShowNameScreen] = useState(defaults.includes(userData?.name || ''));
   const [heroName, setHeroName] = useState('');
 
   const [step, setStep] = useState(0);
   const currentStep = onboardingSteps[step];
+
+  console.log('[DEBUG] OnboardingScreen - Step:', step, 'showNameScreen:', showNameScreen);
 
   const handleNameSubmit = (e: React.FormEvent) => {
     e.preventDefault();

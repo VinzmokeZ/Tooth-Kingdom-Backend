@@ -108,8 +108,7 @@ export const LEARNING_RESOURCES: Resource[] = [
         rating: 5,
         views: '12.5K',
         thumbnail: '/thumbnails/tooth_kingdom_bg.png',
-        aiRecommended: true,
-        url: 'https://www.youtube.com/results?search_query=brushing+teeth+for+kids+cartoon'
+        url: 'https://www.youtube-nocookie.com/embed/hDZd_06fjkQ' // Colgate: How to Brush
     },
     {
         id: 2,
@@ -145,8 +144,8 @@ export const LEARNING_RESOURCES: Resource[] = [
         duration: '4:15',
         rating: 5,
         views: '9.7K',
-        thumbnail: 'https://images.unsplash.com/photo-1598256989800-fe5f95da9787?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZW50c3RyeSUyMGZsb3NzaW5nfGVufDF8fHx8MTc2OTE0MDc4OXww&ixlib=rb-4.1.0&q=80&w=1080',
-        url: 'https://www.youtube.com/results?search_query=flossing+dance+for+kids'
+        thumbnail: 'https://images.unsplash.com/photo-1598256989800-fe5f95da9787?ixlib=rb-4.1.0&auto=format&fit=crop&w=1080&q=80',
+        url: 'https://www.youtube-nocookie.com/embed/OM6p94tAtGg' // Pinkfong: Brush Your Teeth
     },
 
     // Parents Resources
@@ -172,8 +171,8 @@ export const LEARNING_RESOURCES: Resource[] = [
         duration: '12:45',
         rating: 5,
         views: '14.2K',
-        thumbnail: 'https://images.unsplash.com/photo-1516575150278-77136aed6920?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoZWFsdGh5JTIwaGFiaXRzJTIwZmFtaWx5fGVufDF8fHx8MTc2OTE0MDc4OXww&ixlib=rb-4.1.0&q=80&w=1080',
-        url: 'https://www.youtube.com/results?search_query=dental+hygiene+tips+for+parents'
+        thumbnail: 'https://images.unsplash.com/photo-1516575150278-77136aed6920?ixlib=rb-4.1.0&auto=format&fit=crop&w=1080&q=80',
+        url: 'https://www.youtube-nocookie.com/embed/1Wqv-kUX8ao' // Trip to the Dentist (Sesame Street)
     },
     {
         id: 7,
@@ -198,7 +197,7 @@ export const LEARNING_RESOURCES: Resource[] = [
         views: '16.8K',
         thumbnail: assetDentalVisitPrep,
         aiRecommended: true,
-        url: 'https://www.youtube.com/results?search_query=child+first+dentist+visit+prep'
+        url: 'https://www.youtube-nocookie.com/embed/h3X6u_2G_pI' // Sesame Street: Healthy Teeth
     },
 
     // Teachers Resources
@@ -236,8 +235,8 @@ export const LEARNING_RESOURCES: Resource[] = [
         duration: '25:00',
         rating: 4,
         views: '5.8K',
-        thumbnail: 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdWRpdG9yaXVtJTIwc2Nob29sfGVufDF8fHx8MTc2OTE0MDc4OXww&ixlib=rb-4.1.0&q=80&w=1080',
-        url: 'https://www.youtube.com/results?search_query=dental+health+school+assembly'
+        thumbnail: 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?ixlib=rb-4.1.0&auto=format&fit=crop&w=1080&q=80',
+        url: 'https://www.youtube-nocookie.com/embed/rI1GZlW2B_0' // Healthy Teeth Launch
     },
     {
         id: 12,
@@ -274,7 +273,7 @@ export const ACADEMY_COURSES: Course[] = [
         isDownloaded: true,
         isFeatured: true,
         aiRecommended: true,
-        url: 'https://www.youtube.com/results?search_query=dental+hygiene+course+for+kids',
+        url: 'https://www.youtube-nocookie.com/embed/aOebfGGcjVw', // Complete Dental Hygiene for Kids
     },
     {
         id: 2,
@@ -291,7 +290,7 @@ export const ACADEMY_COURSES: Course[] = [
         students: '22.8K',
         isFeatured: true,
         aiRecommended: true,
-        url: 'https://www.youtube.com/results?search_query=parenting+guide+dental+care',
+        url: 'https://www.youtube-nocookie.com/embed/1Wqv-kUX8ao', // Parent's Guide (Full Episode)
     },
     {
         id: 3,
@@ -305,7 +304,8 @@ export const ACADEMY_COURSES: Course[] = [
         thumbnail: '/thumbnails/worksheets.png',
         rating: 5,
         students: '8.5K',
-        url: 'https://www.youtube.com/results?search_query=teaching+dental+health+in+schools',
+        aiRecommended: true,
+        url: 'https://www.youtube-nocookie.com/embed/YLuaHCbtXW4', // Teaching Dental Health in Schools
     },
     {
         id: 4,
@@ -320,8 +320,7 @@ export const ACADEMY_COURSES: Course[] = [
         progress: 100,
         rating: 5,
         students: '12.1K',
-        isDownloaded: true,
-        url: 'https://www.youtube.com/results?search_query=advanced+brushing+techniques',
+        url: 'https://www.youtube-nocookie.com/embed/r4v5j2U0fkY', // Advanced Brushing Techniques (Shorts)
     },
     {
         id: 5,
@@ -335,8 +334,7 @@ export const ACADEMY_COURSES: Course[] = [
         thumbnail: '/thumbnails/nutrition_guide.png',
         rating: 4,
         students: '18.3K',
-        aiRecommended: true,
-        url: 'https://www.youtube.com/results?search_query=nutrition+healthy+teeth',
+        url: 'https://www.youtube-nocookie.com/embed/IUUKyOtSZ8U', // Nutrition for Healthy Teeth
     },
     {
         id: 6,
@@ -350,7 +348,7 @@ export const ACADEMY_COURSES: Course[] = [
         thumbnail: '/thumbnails/mouth_bg.png',
         rating: 5,
         students: '6.7K',
-        url: 'https://www.youtube.com/results?search_query=dental+games+activities',
+        url: 'https://www.youtube-nocookie.com/embed/Hj6a94JiCXk', // Fun Dental Games & Activities
     },
 ];
 
@@ -469,6 +467,6 @@ export const ACADEMY_PDFS: PDFResource[] = [
         targetAudience: 'parents',
         thumbnail: '/thumbnails/recipe_book.png',
         isDownloaded: false,
-        url: 'https://www.youtube.com/results?search_query=first+dentist+visit+story'
+        url: 'https://www.mouthhealthy.org/en/babies-and-kids/first-dental-visit'
     }
 ];
