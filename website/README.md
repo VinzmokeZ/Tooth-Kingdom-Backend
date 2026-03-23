@@ -1,18 +1,18 @@
 # Tooth Kingdom Adventure - Frontend Website
 
-This is the React-based frontend for the **Tooth Kingdom Adventure** application. It serves as both the web platform and the source for the Android/iOS mobile apps (via Capacitor).
+This is the React-based frontend for the **Tooth Kingdom Adventure** application. It serves as both a responsive web platform and the source for Android/iOS mobile apps (via Capacitor).
 
 ## 🚀 Quick Start
 
 1.  **Install Dependencies:**
     ```bash
-    npm install
+    npm install --legacy-peer-deps
     ```
 
 2.  **Configure Environment:**
-    Copy `.env.example` to `.env` and adjust the `VITE_LOCAL_BACKEND_URL` if necessary.
+    Copy `.env.example` to `.env`. Ensure `VITE_LOCAL_BACKEND_URL` matches your running backend.
     ```bash
-    cp .env.example .env
+    # Default local backend is http://localhost:8010
     ```
 
 3.  **Run Development Server:**
@@ -20,38 +20,48 @@ This is the React-based frontend for the **Tooth Kingdom Adventure** application
     npm run dev
     ```
 
+## 🖥️ Desktop & Landscape Mode
+
+The application now supports a dedicated **Landscape Web Mode** optimized for large screens.
+
+- **Standard View**: [http://localhost:3000/](http://localhost:3000/) (Mobile-first with Phone Frame)
+- **Landscape View**: [http://localhost:3000/?view=web](http://localhost:3000/?view=web) 
+  - Activates a persistent **Sidebar Navigation**.
+  - Transforms the Dashboard into a **Multi-Column Grid**.
+  - Removes the Phone Frame for a full-screen experience.
+
 ## 🛠 Tech Stack
 
-- **Framework:** React 18 with Vite
-- **Language:** TypeScript
-- **Styling:** TailwindCSS
+- **Framework:** React 18 (Vite) / TypeScript
+- **Styling:** TailwindCSS 4.x
 - **Animations:** Framer Motion
-- **Icons:** Lucide React
-- **Mobile Packaging:** Capacitor
-- **State Management:** React Context (Auth, Game, Sound)
+- **Mobile:** Capacitor 6.x
 
-## 🔗 Backend Connection
+## 🔗 Backend & Hosting
 
-The frontend is designed to work exclusively with the **Python FastAPI Backend**.
+The frontend connects to the **Python FastAPI Backend** (default: port 8010).
 
-- **Auto-Detection:** By default, it attempts to find the backend at `http://localhost:8000` or the current host's IP.
-- **Manual Override:** Set `VITE_LOCAL_BACKEND_URL` in your `.env` file to point to your deployed production backend (e.g., `http://your-college-server-ip:8000`).
+### 🌐 Deployment Tips
+- **Environment Variables**: Always set `VITE_LOCAL_BACKEND_URL` to your production API endpoint.
+- **HTTPS**: For production hosting (e.g., Vercel, Firebase Hosting), ensure your backend also uses HTTPS to avoid "Mixed Content" errors.
+- **CORS**: Ensure your Python backend allows the origin where this website is hosted.
 
-## 📦 Build & Deployment
+## 🔍 Troubleshooting & Debugging
 
-To create a production build of the website:
-```bash
-npm run build
-```
-The output will be in the `dist/` folder, which can be hosted on any static web server (Nginx, Apache, Vercel, Netlify, etc.).
+### Common Issues
+- **White Screen**:
+  - Check the Browser Console (F12). 
+  - Ensure all environment variables in `.env` are set.
+  - If you see `ReferenceError`, ensure you are on the latest code branch where state hoisting is fixed.
+- **Backend Connection Failed**:
+  - Verify the backend is running on port `8010`.
+  - Check if your Firewall/Antivirus is blocking the connection.
+  - In a local network, use the server's IP (e.g., `192.168.1.x`) in both `.env` and `main.py`.
 
-## 📱 Mobile App (Android)
-
-This same codebase is used to build the Android app.
+## 📱 Mobile App
 1. `npm run build`
 2. `npx cap sync android`
-3. Open the `android/` project in Android Studio and build the APK/Bundle.
+3. Open `android/` in Android Studio.
 
 ## 🔐 Authentication
-
-All authentication flows (Email/Password, Phone OTP, Google) are handled by the Python backend. This version is **Firebase-free** and relies solely on the high-performance Python API.
+This version is **Firebase-free** for core logic. All authentication (OTP, Phone, Email) is processed by the local Python API.
