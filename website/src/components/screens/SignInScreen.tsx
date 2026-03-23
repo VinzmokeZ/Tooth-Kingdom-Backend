@@ -728,8 +728,8 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
           </div>
 
           {/* Bottom text */}
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
-            By continuing, you agree to our Terms & Privacy Policy
+          <p className="text-center text-[11px] text-gray-500 dark:text-gray-400 mt-6 px-4 leading-relaxed">
+            By continuing, you agree to our <button type="button" onClick={() => navigateTo('privacy')} className="text-purple-600 underline">Privacy Policy</button> and <button type="button" onClick={() => navigateTo('delete-account')} className="text-purple-600 underline">Data Deletion Rights</button>.
           </p>
 
           {/* Invisible Recaptcha */}

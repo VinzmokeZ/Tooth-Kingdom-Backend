@@ -30,6 +30,8 @@ import { TeacherStudentDetailScreen } from './screens/TeacherStudentDetailScreen
 import { TeacherLeaderboardScreen } from './screens/TeacherLeaderboardScreen';
 import { TeacherBrushCheckScreen } from './screens/TeacherBrushCheckScreen';
 import { AttributionsScreen } from './screens/AttributionsScreen';
+import { PrivacyPolicyScreen } from './screens/PrivacyPolicyScreen';
+import { DataDeletionScreen } from './screens/DataDeletionScreen';
 import { UserData } from './screens/types';
 
 interface AppScreensProps {
@@ -109,6 +111,10 @@ export function AppScreens({ currentScreen, navigateTo, userData, updateUserData
         return <TeacherBrushCheckScreen {...screenProps} />;
       case 'attributions':
         return <AttributionsScreen {...screenProps} />;
+      case 'privacy':
+        return <PrivacyPolicyScreen {...screenProps} />;
+      case 'delete-account':
+        return <DataDeletionScreen {...screenProps} />;
       default:
         return <SplashScreen {...screenProps} />;
     }

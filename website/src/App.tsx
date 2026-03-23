@@ -39,6 +39,20 @@ const AppContent = ({ isWebPreview }: { isWebPreview: boolean }) => {
     };
     setupDeepLink();
   }, []);
+
+  // v4.2: URL Route Detection (Privacy/Delete URLs)
+  useEffect(() => {
+    const path = window.location.pathname.toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    const screenParam = params.get('screen')?.toLowerCase();
+
+    if (path === '/privacy' || screenParam === 'privacy') {
+      setCurrentScreen('privacy');
+    } else if (path === '/delete-account' || screenParam === 'delete-account' || screenParam === 'delete') {
+      setCurrentScreen('delete-account');
+    }
+  }, []);
+
   const { userData, updateUserData } = useGame();
   const { theme, setTheme } = useTheme();
   const { currentUser, loading: authLoading } = useAuth();
@@ -159,7 +173,7 @@ const AppContent = ({ isWebPreview }: { isWebPreview: boolean }) => {
           return () => clearTimeout(timer);
         } else {
           // If on a protected screen (not in public list), force redirect to signin
-          const publicScreens = ['splash', 'signin', 'otp-verification', 'onboarding', 'character-select'];
+          const publicScreens = ['splash', 'signin', 'otp-verification', 'onboarding', 'character-select', 'privacy', 'delete-account'];
           if (!publicScreens.includes(currentScreen)) {
             setCurrentScreen('signin');
           }
