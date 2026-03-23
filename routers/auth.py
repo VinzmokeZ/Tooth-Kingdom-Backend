@@ -262,7 +262,7 @@ def register(req: RegisterRequest):
         token = make_token(uid)
         log.success(f"New user registered: {req.email} [{req.role}] uid={uid}")
         return {"success": True, "token": token,
-                "user": {"id": uid, "name": req.name, "email": req.email, "role": req.role}}
+                "user": {"uid": uid, "id": uid, "name": req.name, "email": req.email, "role": req.role}}
     finally:
         conn.close()
 
@@ -281,7 +281,7 @@ def login(req: LoginRequest):
         log.success(f"Login: {req.email} [{row['role']}]")
         return {
             "success": True, "token": token,
-            "user": {"id": row["uid"], "name": row["name"], "email": row["email"],
+            "user": {"uid": row["uid"], "id": row["uid"], "name": row["name"], "email": row["email"],
                      "role": row["role"], "phone": row["phone"]}
         }
     finally:
@@ -297,7 +297,7 @@ def google_auth(req: GoogleAuthRequest):
             token = make_token(row["uid"])
             log.success(f"Google login (existing): {req.email}")
             return {"success": True, "token": token,
-                    "user": {"id": row["uid"], "name": row["name"], "email": row["email"], "role": row["role"]}}
+                    "user": {"uid": row["uid"], "id": row["uid"], "name": row["name"], "email": row["email"], "role": row["role"]}}
 
         uid = f"google_{req.provider_id or random.randint(100000, 999999)}"
         conn.execute(
@@ -310,7 +310,7 @@ def google_auth(req: GoogleAuthRequest):
         token = make_token(uid)
         log.success(f"Google register: {req.email} uid={uid}")
         return {"success": True, "token": token,
-                "user": {"id": uid, "name": req.name, "email": req.email, "role": "child"}}
+                "user": {"uid": uid, "id": uid, "name": req.name, "email": req.email, "role": "child"}}
     finally:
         conn.close()
 
@@ -428,7 +428,7 @@ def verify_otp(req: OTPVerifyRequest):
         token = make_token(uid)
         log.success(f"OTP verified for {req.phone}, uid={uid}")
         return {"success": True, "token": token,
-                "user": {"id": uid, "name": name, "role": role, "phone": req.phone}}
+                "user": {"uid": uid, "id": uid, "name": name, "role": role, "phone": req.phone}}
     finally:
         conn.close()
 
@@ -444,7 +444,7 @@ def get_me(authorization: Optional[str] = Header(None)):
         row = conn.execute("SELECT * FROM users WHERE uid=?", (uid,)).fetchone()
         if not row:
             raise HTTPException(404, "User not found")
-        return {"success": True, "user": {"id": row["uid"], "name": row["name"],
+        return {"success": True, "user": {"uid": row["uid"], "id": row["uid"], "name": row["name"],
                 "email": row["email"], "role": row["role"], "phone": row["phone"]}}
     finally:
         conn.close()
