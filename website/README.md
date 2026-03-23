@@ -15,7 +15,7 @@
 | UI Components | Radix UI + Lucide Icons |
 | Animations | Framer Motion |
 | Mobile | Capacitor (Android) |
-| Auth | Firebase Auth (Google Sign-In) + Local Python Backend |
+| Auth | Python Backend (email, phone, Google sign-in) |
 | Charts | Recharts |
 
 ## Quick Start
@@ -26,7 +26,6 @@ npm install
 
 # 2. Create environment file
 cp .env.example .env
-# Edit .env with your Firebase config (for Google login)
 
 # 3. Start development server
 npm run dev
@@ -35,21 +34,6 @@ npm run dev
 Website runs at **http://localhost:5173**
 
 > **Important:** The Python backend must be running on port 8010 for login, game data, and AI features to work. See the root `README.md` for backend setup.
-
-## Environment Variables
-
-Copy `.env.example` to `.env` and fill in your Firebase project values:
-
-```env
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
-
-> Firebase is used **only for Google Sign-In**. All other auth (email/password, phone OTP) goes directly through the Python backend. The app works without Firebase — users just won't have the Google login option.
 
 ## Connecting to the Backend
 
@@ -72,7 +56,7 @@ VITE_LOCAL_BACKEND_URL=http://your-server-ip:8010
 npm run build
 ```
 
-Output goes to `dist/` — deploy this folder to any static hosting (Netlify, Firebase Hosting, Nginx, etc.).
+Output goes to `dist/` — deploy this folder to any static hosting (Netlify, Nginx, Apache, etc.).
 
 ## Project Structure
 
@@ -90,7 +74,7 @@ website/
     ├── index.css        # Global styles
     ├── components/      # UI components and screens
     ├── context/         # Auth + Game state management
-    ├── lib/             # Firebase config, utilities
+    ├── lib/             # Config and utilities
     ├── services/        # RPG game service
     ├── hooks/           # Custom React hooks
     ├── data/            # Static game data
@@ -106,6 +90,15 @@ The app includes 30+ screens covering:
 - **Progress**: Stats, calendar, achievements, rewards
 - **Social**: Leaderboard, parent dashboard, teacher dashboard
 - **Settings**: Profile, app preferences
+
+## Authentication
+
+All authentication flows go through the **Python backend**:
+- **Email + Password** — register/login via `/auth/register` and `/auth/login`
+- **Phone OTP** — request OTP via `/auth/phone`, verify via `/auth/verify-otp`
+- **Google Sign-In** — handled via `/auth/google` and `/auth/sync`
+
+No external authentication services are required on the server side.
 
 ## License
 
