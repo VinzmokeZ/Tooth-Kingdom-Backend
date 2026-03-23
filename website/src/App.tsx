@@ -12,7 +12,7 @@ import { useSound } from './hooks/useSound';
 import { AnimatedBackground } from './components/AnimatedBackground';
 
 // Inner component to handle screen state, now that data is in Context
-const AppContent = () => {
+const AppContent = ({ isWebPreview }: { isWebPreview: boolean }) => {
   const [currentScreen, setCurrentScreen] = useState<string>('splash');
   
   // Deep Link Listener for Wireless IP Sync
@@ -191,6 +191,7 @@ const AppContent = () => {
         updateUserData={updateUserData}
         selectedStudent={selectedStudent}
         setSelectedStudent={setSelectedStudent}
+        isWebPreview={isWebPreview}
       />
 
       {/* Global Reward Popup Overlay */}
@@ -236,6 +237,16 @@ const AppContent = () => {
 };
 
 export default function App() {
+  const [isWebPreview, setIsWebPreview] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') === 'web') {
+      setIsWebPreview(true);
+      console.log('[VIEW] Web Preview Mode Active');
+    }
+  }, []);
+
   const isMobileMode = typeof window !== 'undefined' && (
     (window as any).Capacitor?.isNative || 
     window.innerWidth < 1024 || 
@@ -250,11 +261,11 @@ export default function App() {
         }`}>
         <AuthProvider>
           <GameProvider>
-            {isMobileMode ? (
-              <AppContent />
+            {isMobileMode || isWebPreview ? (
+              <AppContent isWebPreview={isWebPreview} />
             ) : (
               <PhoneFrame>
-                <AppContent />
+                <AppContent isWebPreview={isWebPreview} />
               </PhoneFrame>
             )}
           </GameProvider>

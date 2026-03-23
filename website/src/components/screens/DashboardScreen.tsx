@@ -9,7 +9,7 @@ import { Browser } from '@capacitor/browser';
 import { useSound } from '../../hooks/useSound';
 // Removed NotificationOverlay as we are switching to dedicated Screen
 
-export function DashboardScreen({ navigateTo, userData, updateUserData }: ScreenProps) {
+export function DashboardScreen({ navigateTo, userData, updateUserData, isWebPreview }: ScreenProps & { isWebPreview?: boolean }) {
   const AI_TIPS = [
     "Great job checking in! Did you know brushing for 2 minutes is the perfect amount of time to defeat all sugar bugs?",
     "Fun Fact: Flossing once a day keeps the gum monsters away!",
@@ -116,15 +116,24 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
   const unreadNotifications = (userData.notifications || []).filter(n => !n.read).length;
 
   return (
-    <div className="h-full bg-transparent flex flex-col overflow-hidden relative">
-      {/* Header (Fixed Top) */}
-      <div className="flex-none bg-gradient-to-br from-purple-500 to-purple-600 text-white px-5 pt-safe pb-4 z-50 shadow-xl border-b border-purple-400/30">
-        <div className="flex justify-between items-center mb-5 relative z-[60]">
+    <div className="h-full bg-transparent flex flex-col lg:flex-row overflow-hidden relative">
+      {/* Header (Fixed Top on Mobile, potentially sidebar on Desktop) */}
+      <div className={`flex-none bg-gradient-to-br from-purple-500 to-purple-600 text-white px-5 pt-safe pb-4 z-50 shadow-xl border-b border-purple-400/30 ${isWebPreview ? 'lg:w-[350px] lg:h-full lg:border-r lg:border-b-0 lg:flex-col lg:px-8 lg:pt-12' : ''}`}>
+        <div className={`flex justify-between items-center mb-5 relative z-[60] ${isWebPreview ? 'lg:mb-12 lg:flex-col lg:items-start lg:gap-8' : ''}`}>
           <button onClick={() => navigateTo('settings')} className="p-2 -ml-2 rounded-xl hover:bg-white/20 transition-all hover-float active-pop relative z-[60] cursor-pointer pointer-events-auto"><Menu className="w-6 h-6" /></button>
-          <h1 className="font-extrabold text-xl">Dashboard</h1>
+          
+          {isWebPreview && (
+            <div className="hidden lg:block">
+               <h2 className="text-3xl font-black tracking-tight leading-none mb-2">Hello,<br/>{userData.name}!</h2>
+               <p className="text-purple-100/70 text-sm font-bold uppercase tracking-widest">Kingdom Guardian</p>
+            </div>
+          )}
+
+          {!isWebPreview && <h1 className="font-extrabold text-xl">Dashboard</h1>}
+          
           <button
             onClick={() => navigateTo('notifications')}
-            className="relative p-2 -mr-2 hover:bg-white/20 rounded-xl transition-all hover-float active-pop z-[60] cursor-pointer pointer-events-auto"
+            className={`relative p-2 -mr-2 hover:bg-white/20 rounded-xl transition-all hover-float active-pop z-[60] cursor-pointer pointer-events-auto ${isWebPreview ? 'lg:absolute lg:right-0 lg:top-0' : ''}`}
           >
             <Bell className="w-6 h-6 text-white" />
             {unreadNotifications > 0 && (
@@ -134,7 +143,9 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
             )}
           </button>
         </div>
-        <div className="bg-white rounded-[2rem] p-5 shadow-lg mb-2 relative overflow-hidden">
+        
+        {/* Adaptive Profile Card (Simplified for Sidebar) */}
+        <div className={`bg-white rounded-[2rem] p-5 shadow-lg mb-2 relative overflow-hidden ${isWebPreview ? 'lg:shadow-2xl lg:mb-8' : ''}`}>
           <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
             {[...Array(3)].map((_, i) => (
               <motion.div key={`bubble-${i}`} className="absolute rounded-full blur-3xl mix-blend-multiply"
@@ -219,13 +230,33 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
           </div>
         </div>
       </div>
-
-      {/* Scrollable Content Area - Forced native behavior */}
-      <div className="flex-1 overflow-y-auto no-scrollbar px-5 py-6 space-y-6 touch-pan-y overscroll-contain relative z-10 native-scroll-fix bg-transparent" 
+      
+      {/* Scrollable Content Area - Multi-column grid on desktop */}
+      <div className={`flex-1 overflow-y-auto no-scrollbar px-5 py-6 space-y-6 touch-pan-y overscroll-contain relative z-10 native-scroll-fix bg-transparent ${isWebPreview ? 'lg:grid lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-12 lg:space-y-0' : ''}`} 
            id="dashboard-scroll-area"
            style={{ WebkitOverflowScrolling: 'touch', flex: '1 1 auto' }}>
         
-        {/* INLINE VIDEO PLAYER (Top-of-Feed) - Matching User Request */}
+        {/* Left Column (Stats/Tips) or Top Main if not landscape */}
+        <div className={isWebPreview ? 'lg:col-span-4 lg:space-y-8' : 'hidden'}>
+           {/* AI DAILY TIP (Moved here for landscape balance) */}
+           {isWebPreview && (
+              <div className="hidden lg:block relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-cyan-500 to-blue-600 p-[2px] shadow-2xl transition-all">
+                <div className="rounded-[calc(2.5rem-2px)] bg-white/10 backdrop-blur-xl overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-lg"><Bot className="w-6 h-6 text-cyan-500" /></div>
+                      <h4 className="text-white font-black text-sm uppercase tracking-wider">Tanu AI Guide</h4>
+                    </div>
+                    <p className="text-white text-sm font-medium leading-relaxed">{currentTip}</p>
+                  </div>
+                </div>
+              </div>
+           )}
+        </div>
+
+        {/* Right Column (Game/Learning/Video) - Main Content */}
+        <div className={isWebPreview ? 'lg:col-span-8 lg:space-y-8' : 'w-full space-y-6'}>
+          {/* INLINE VIDEO PLAYER (Top-of-Feed) - Matching User Request */}
         <AnimatePresence>
           {selectedVideoUrl && (
             <motion.div
@@ -297,20 +328,20 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
                       window.open(featuredCourse.url, '_blank');
                     }
                   }}
-                  className="relative h-48 overflow-hidden bg-gray-900 cursor-pointer active:scale-[0.98] transition-all"
+                  className={`relative overflow-hidden bg-gray-900 cursor-pointer active:scale-[0.98] transition-all ${isWebPreview ? 'lg:h-80' : 'h-48'}`}
                 >
                   {/* Background (Previous) Image */}
                   <img
                     src={recommendedCourses[currentCourseIndex]?.thumbnail || '/thumbnails/tooth_kingdom_bg.png'}
                     alt="Current"
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                    className={`absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ${isWebPreview ? 'lg:object-top' : ''}`}
                   />
 
                   {/* Foreground (Next) Image Layer */}
                   <img
                     src={recommendedCourses[nextCourseIndex]?.thumbnail || '/thumbnails/tooth_kingdom_bg.png'}
                     alt="Next"
-                    className={`absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-all duration-1000 ${isCarouselTransitioning ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}
+                    className={`absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-all duration-1000 ${isCarouselTransitioning ? 'opacity-100 scale-100' : 'opacity-0 scale-110'} ${isWebPreview ? 'lg:object-top' : ''}`}
                   />
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-4 md:p-6 z-10 pointer-events-none">
@@ -410,7 +441,7 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
               <img
                 src="/thumbnails/rpg_hub_hero.png"
                 alt="Tooth Kingdom"
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 ${isWebPreview ? 'lg:object-top' : ''}`}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
 
@@ -585,50 +616,53 @@ export function DashboardScreen({ navigateTo, userData, updateUserData }: Screen
                 <div
                   className="h-full bg-white rounded-full transition-all duration-1000"
                   style={{ width: `${Math.min((userData.currentStreak / 14) * 100, 100)}%` }}
-                />
+                ></div>
               </div>
             </div>
           </div>
         </div>
-
-      </div>
+        
+        </div> {/* Close Right Column (Line 258) */}
+      </div> {/* Close Scroll Area (Line 235) */}
 
       {/* Notification overlay removed in favor of dedicated Notifications screen */}
 
-      {/* Bottom Nav Spacer */}
-      <div className="pb-24" />
+      {/* Bottom Nav Spacer (Hidden in WebPreview Sidebar mode) */}
+      {!isWebPreview && <div className="pb-24" />}
 
-      {/* Persistent Bottom Nav (Mock) */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe z-50 pointer-events-none">
-        <div className="max-w-md mx-auto pointer-events-auto">
-          <div className="glass-card border-t border-white/20 dark:border-transparent px-5 py-3 flex justify-around items-center rounded-[2.5rem] shadow-[0_-8px_32px_rgba(0,0,0,0.15)] bg-white/90 backdrop-blur-xl">
-            <button className="flex flex-col items-center gap-1 group hover-float active-pop">
-              <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg transition-all">
-                <Home className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xs font-bold text-purple-600 tracking-tight">Home</span>
-            </button>
-            <button onClick={() => navigateTo('chapters')} className="flex flex-col items-center gap-1 group hover-float active-pop">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-purple-50 transition-all">
-                <BookOpen className="w-6 h-6 text-gray-400 group-hover:text-purple-500" />
-              </div>
-              <span className="text-xs font-bold text-gray-400 group-hover:text-purple-500 tracking-tight">Chapters</span>
-            </button>
-            <button onClick={() => navigateTo('progress')} className="flex flex-col items-center gap-1 group hover-float active-pop">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-purple-50 transition-all">
-                <TrendingUp className="w-6 h-6 text-gray-400 group-hover:text-purple-500" />
-              </div>
-              <span className="text-xs font-bold text-gray-400 group-hover:text-purple-500 tracking-tight">Progress</span>
-            </button>
-            <button onClick={() => navigateTo('profile')} className="flex flex-col items-center gap-1 group hover-float active-pop">
-              <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-transparent group-hover:border-purple-300 transition-all">
-                <UserAvatar characterId={userData.selectedCharacter} showBackground={false} className="w-full h-full object-cover scale-110" />
-              </div>
-              <span className="text-xs font-bold text-gray-400 group-hover:text-purple-500 tracking-tight">Profile</span>
-            </button>
+      {/* Persistent Bottom Nav (Mock) - Hidden in WebPreview Sidebar mode */}
+      {!isWebPreview && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe z-50 pointer-events-none">
+          <div className="max-w-md mx-auto pointer-events-auto">
+            <div className="glass-card border-t border-white/20 dark:border-transparent px-5 py-3 flex justify-around items-center rounded-[2.5rem] shadow-[0_-8px_32px_rgba(0,0,0,0.15)] bg-white/90 backdrop-blur-xl">
+              <button className="flex flex-col items-center gap-1 group hover-float active-pop">
+                <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg transition-all">
+                  <Home className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xs font-bold text-purple-600 tracking-tight">Home</span>
+              </button>
+              <button onClick={() => navigateTo('chapters')} className="flex flex-col items-center gap-1 group hover-float active-pop">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-purple-50 transition-all">
+                  <BookOpen className="w-6 h-6 text-gray-400 group-hover:text-purple-500" />
+                </div>
+                <span className="text-xs font-bold text-gray-400 group-hover:text-purple-500 tracking-tight">Chapters</span>
+              </button>
+              <button onClick={() => navigateTo('progress')} className="flex flex-col items-center gap-1 group hover-float active-pop">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-purple-50 transition-all">
+                  <TrendingUp className="w-6 h-6 text-gray-400 group-hover:text-purple-500" />
+                </div>
+                <span className="text-xs font-bold text-gray-400 group-hover:text-purple-500 tracking-tight">Progress</span>
+              </button>
+              <button onClick={() => navigateTo('profile')} className="flex flex-col items-center gap-1 group hover-float active-pop">
+                <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-transparent group-hover:border-purple-300 transition-all">
+                  <UserAvatar characterId={userData.selectedCharacter} showBackground={false} className="w-full h-full object-cover scale-110" />
+                </div>
+                <span className="text-xs font-bold text-gray-400 group-hover:text-purple-500 tracking-tight">Profile</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <style dangerouslySetInnerHTML={{
         __html: `

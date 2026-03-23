@@ -39,10 +39,11 @@ interface AppScreensProps {
   updateUserData: (updates: Partial<UserData>) => void;
   selectedStudent?: any;
   setSelectedStudent?: (student: any) => void;
+  isWebPreview?: boolean;
 }
 
-export function AppScreens({ currentScreen, navigateTo, userData, updateUserData, selectedStudent, setSelectedStudent }: AppScreensProps) {
-  const screenProps = { navigateTo, userData, updateUserData, selectedStudent, setSelectedStudent };
+export function AppScreens({ currentScreen, navigateTo, userData, updateUserData, selectedStudent, setSelectedStudent, isWebPreview }: AppScreensProps) {
+  const screenProps = { navigateTo, userData, updateUserData, selectedStudent, setSelectedStudent, isWebPreview };
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -114,7 +115,7 @@ export function AppScreens({ currentScreen, navigateTo, userData, updateUserData
   };
 
   return (
-    <div className="flex-1 h-full w-full flex flex-col overflow-hidden">
+    <div className={`flex-1 h-full w-full flex flex-col overflow-hidden ${isWebPreview ? 'lg:flex-row' : ''}`}>
       {renderScreen()}
     </div>
   );
