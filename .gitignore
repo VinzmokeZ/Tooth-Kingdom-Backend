@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Databases (generated at runtime)
+db/*.db
+*.db
+*.db.bak
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
