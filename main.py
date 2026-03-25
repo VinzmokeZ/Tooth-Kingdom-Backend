@@ -212,4 +212,4 @@ if __name__ == "__main__":
             methods = list(route.methods)
             print(f"   {', '.join(methods):<8} {route.path}")
     print("=" * 60 + "\n")
-    uvicorn.run(app, host="0.0.0.0", port=8010, log_level="warning", access_log=False)
+    uvicorn.run(app, host="0.0.0.0", port=8117, log_level="warning", access_log=False)
