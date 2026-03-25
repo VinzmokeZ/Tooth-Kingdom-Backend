@@ -196,7 +196,7 @@ class OTPSendRequest(BaseModel):
 
 # ── Email OTP ─────────────────────────────────────────────
 def send_email_otp(target_email: str, otp: str):
-    smtp_user = os.getenv("SMTP_EMAIL", "toothkingdomadventures@gmail.com")
+    smtp_user = os.getenv("SMTP_EMAIL", "")
     smtp_pass = os.getenv("SMTP_PASSWORD", "")
     if not smtp_pass:
         log.warn("SMTP_PASSWORD not set — cannot send email OTP")
