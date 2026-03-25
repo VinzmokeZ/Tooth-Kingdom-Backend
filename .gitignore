@@ -15,8 +15,8 @@ db/*.db
 logs/
 *.log
 
-# Environment
-.env
+# Environment — .env is intentionally committed for college testing
+# .env
 
 # IDE
 .vscode/
