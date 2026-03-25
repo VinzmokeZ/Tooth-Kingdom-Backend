@@ -23,8 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment
-.env
+# Environment - .env is tracked to share the college URL
+# .env
 .env.local
 
 # Capacitor
