@@ -393,6 +393,12 @@ def phone_auth(req: PhoneRequest):
     finally:
         conn.close()
 
+class OTPVerifyRequest(BaseModel):
+    phone: str
+    code: str
+    name: Optional[str] = None
+    role: Optional[str] = None
+    dob: Optional[str] = None
 
 @router.post("/verify-otp")
 def verify_otp(req: OTPVerifyRequest):
@@ -414,19 +420,21 @@ def verify_otp(req: OTPVerifyRequest):
             uid = user_row["uid"]
             name = user_row["name"]
             role = user_row["role"]
+            # Optionally update if provided? For now keep existing
         else:
             uid = f"phone_{random.randint(100000, 999999)}"
-            name = "Mobile Hero"
-            role = "child"
+            name = req.name or "Mobile Hero"
+            role = req.role or "child"
+            dob = req.dob
             conn.execute(
-                "INSERT INTO users (uid, name, phone, role, provider) VALUES (?,?,?,?,?)",
-                (uid, name, req.phone, role, "phone")
+                "INSERT INTO users (uid, name, phone, role, provider, dob) VALUES (?,?,?,?,?,?)",
+                (uid, name, req.phone, role, "phone", dob)
             )
             _ensure_game_profile(uid, name)
 
         conn.commit()
         token = make_token(uid)
-        log.success(f"OTP verified for {req.phone}, uid={uid}")
+        log.success(f"OTP verified for {req.phone}, uid={uid} as {role}")
         return {"success": True, "token": token,
                 "user": {"uid": uid, "id": uid, "name": name, "role": role, "phone": req.phone}}
     finally:
