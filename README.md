@@ -37,8 +37,12 @@ npm install
 ### Step 2: Configure Backend URL
 Edit `website/.env` to point to your backend:
 ```env
-VITE_LOCAL_BACKEND_URL=http://your-server-ip:8010
+VITE_LOCAL_BACKEND_URL=http://your-server-ip:8010 # Pre-filled with college server by default
 ```
+
+> [!TIP]
+> The `.env.example` in this folder is already pre-configured to point to the college backend server (`http://180.235.121.253:8117`) for immediate testing!
+
 
 ### Step 3: Run Development Server
 ```bash
