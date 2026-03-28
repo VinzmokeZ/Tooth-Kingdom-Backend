@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ScreenProps } from './types';
-import { Shield, Bell, Settings, LogOut, Flame, Star, TrendingUp, Sparkles, Bot, Wand2, Home, BarChart2, Users, Heart, ChevronRight, Target, Check, Zap, History, Calendar, Award } from 'lucide-react';
-import { useAuth, API_URL } from '../../context/AuthContext';
+import { Shield, Bell, Settings, LogOut, Flame, Star, TrendingUp, Sparkles, Bot, Wand2, Home, BarChart2, Users, Heart, ChevronRight, Target, Check } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { UserAvatar } from '../common/UserAvatar';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { AnimatedBackground } from '../AnimatedBackground';
 
 // ─── HOME TAB ──────────────────────────────────────────────────────
-function ParentHomeTab({ userData, navigateTo, displayChild, currentUser }: any) {
+function ParentHomeTab({ userData, navigateTo }: any) {
     const [currentTip, setCurrentTip] = useState("Great job! Your child brushed consistently this week. Try scheduling a 'Duo Brushing' tonight to keep the streak alive!");
     const [isAnimatingTip, setIsAnimatingTip] = useState(false);
 
@@ -28,21 +28,10 @@ function ParentHomeTab({ userData, navigateTo, displayChild, currentUser }: any)
         }, 500);
     };
 
-    const MOCK_BRUSHING_LOGS = [
-        { date: '2026-03-17', morning: true, evening: true },
-        { date: '2026-03-16', morning: true, evening: false },
-        { date: '2026-03-15', morning: true, evening: true },
-        { date: '2026-03-14', morning: false, evening: true },
-        { date: '2026-03-13', morning: true, evening: true },
-    ];
-
-    const realActivity = Object.entries(userData.brushingLogs || {})
+    const recentActivity = Object.entries(userData.brushingLogs || {})
         .sort(([a], [b]) => b.localeCompare(a))
         .slice(0, 5)
         .map(([date, logs]: any) => ({ date, morning: logs.morning, evening: logs.evening }));
-
-    // Always show mock data if there's no real brushing data yet
-    const recentActivity = realActivity.length > 0 ? realActivity : MOCK_BRUSHING_LOGS;
 
     return (
         <div className="space-y-6">
@@ -59,7 +48,7 @@ function ParentHomeTab({ userData, navigateTo, displayChild, currentUser }: any)
                     onClick={() => navigateTo('parent-history')}
                     className="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden divide-y divide-gray-50 cursor-pointer hover-float active-pop hover:border-purple-200 transition-all relative z-10"
                 >
-                    {recentActivity.map((log: any) => (
+                    {recentActivity.length > 0 ? recentActivity.map((log: any) => (
                         <div key={log.date} className="p-5 flex items-center justify-between hover:bg-purple-50/50 transition-colors">
                             <div>
                                 <p className="font-black text-gray-900 text-sm">{new Date(log.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</p>
@@ -74,7 +63,12 @@ function ParentHomeTab({ userData, navigateTo, displayChild, currentUser }: any)
                                 </div>
                             </div>
                         </div>
-                    ))}
+                    )) : (
+                        <div className="p-10 text-center">
+                            <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                            <p className="text-xs text-gray-400 font-bold">No brushing logged yet</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -88,8 +82,8 @@ function ParentHomeTab({ userData, navigateTo, displayChild, currentUser }: any)
                     >
                         <div className="absolute -right-3 -top-3 w-14 h-14 bg-purple-100 rounded-full opacity-60 group-hover:scale-110 transition-transform" />
                         <p className="text-[9px] font-black text-purple-600 uppercase tracking-widest mb-1">Current Level</p>
-                        <p className="text-4xl font-black text-gray-900 group-hover:text-purple-700 transition-colors">{displayChild.level}</p>
-                        <p className="text-[9px] text-gray-400 font-bold mt-1">{displayChild.xp || 0} XP earned</p>
+                        <p className="text-4xl font-black text-gray-900 group-hover:text-purple-700 transition-colors">{userData.level}</p>
+                        <p className="text-[9px] text-gray-400 font-bold mt-1">{userData.xp} XP earned</p>
                         <TrendingUp className="absolute right-4 bottom-4 w-6 h-6 text-purple-200 group-hover:text-purple-400 transition-colors" />
                     </div>
                     <div
@@ -98,70 +92,41 @@ function ParentHomeTab({ userData, navigateTo, displayChild, currentUser }: any)
                     >
                         <div className="absolute -right-3 -top-3 w-14 h-14 bg-amber-100 rounded-full opacity-60 group-hover:scale-110 transition-transform" />
                         <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Total Stars</p>
-                        <p className="text-4xl font-black text-gray-900 group-hover:text-amber-700 transition-colors">{displayChild.stars ?? displayChild.gold ?? 0}</p>
+                        <p className="text-4xl font-black text-gray-900 group-hover:text-amber-700 transition-colors">{userData.totalStars}</p>
                         <p className="text-[9px] text-gray-400 font-bold mt-1">All-time earned</p>
                         <Star className="absolute right-4 bottom-4 w-6 h-6 text-amber-200 group-hover:text-amber-400 transition-colors" />
                     </div>
                 </div>
             </div>
 
-            {/* AI Parent Tip - Solid Pink Theme */}
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-pink-500 shadow-xl border border-pink-400/20">
-                <div className="overflow-hidden">
+            {/* AI Parent Tip */}
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-cyan-500 to-blue-600 p-[2px] shadow-2xl">
+                <div className="rounded-[calc(2.5rem-2px)] bg-white/10 backdrop-blur-xl overflow-hidden">
                     <div className="px-5 py-4 border-b border-white/20 flex items-center justify-between bg-white/10">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-lg">
-                                <Bot className="w-6 h-6 text-pink-600" />
+                                <Bot className="w-6 h-6 text-cyan-500" />
                             </div>
                             <div>
                                 <h4 className="text-white font-black text-sm uppercase tracking-wider">AI Parent Guidance</h4>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-1.5 h-1.5 bg-rose-300 rounded-full" />
-                                    <span className="text-white/80 text-[10px] font-bold uppercase tracking-tight">Active Analysis</span>
+                                    <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                                    <span className="text-white/60 text-[10px] font-bold uppercase tracking-tight">Active Analysis</span>
                                 </div>
                             </div>
                         </div>
-                        <Sparkles className="w-5 h-5 text-pink-200 animate-pulse" />
+                        <Sparkles className="w-5 h-5 text-cyan-200 animate-pulse" />
                     </div>
                     <div className="p-5">
                         <div className="bg-white/10 rounded-2xl border border-white/10 p-4 shadow-inner mb-4">
                             <p className={`text-sm text-white font-medium leading-relaxed transition-opacity duration-300 ${isAnimatingTip ? 'opacity-0' : 'opacity-100'}`}>{currentTip}</p>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={getNewTip} disabled={isAnimatingTip} className="flex-1 py-2.5 bg-white/20 hover:bg-white/30 text-white font-black rounded-xl text-[10px] uppercase tracking-tight transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 whitespace-nowrap">
-                                <Wand2 className="w-3.5 h-3.5 flex-shrink-0" /> Next Tip
-                            </button>
-                            <button 
-                                onClick={async () => {
-                                    const sender = currentUser?.uid || userData.uid;
-                                    const receiver = displayChild?.uid;
-                                    
-                                    if (!sender || !receiver) {
-                                        alert('Could not identify accounts. Please try linking your child first.');
-                                        return;
-                                    }
-
-                                    await fetch(`${API_URL}/reminders/send`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ 
-                                            sender_uid: sender, 
-                                            receiver_uid: receiver,
-                                            message: 'Time for a Kingdom Brush! 🦷✨',
-                                            type: 'reminder'
-                                        })
-                                    });
-                                    alert('Reminder sent! 🦷✨');
-                                }}
-                                className="flex-1 py-2.5 bg-white/20 hover:bg-white/30 text-white font-black rounded-xl text-[10px] uppercase tracking-tight transition-all hover-float active-pop flex items-center justify-center gap-1.5 group/remind whitespace-nowrap"
-                            >
-                                <Bell className="w-3.5 h-3.5 group-hover/remind:animate-bounce flex-shrink-0" /> Nudge
-                            </button>
-                        </div>
+                        <button onClick={getNewTip} disabled={isAnimatingTip} className="w-full py-2.5 bg-white/20 hover:bg-white/30 text-white font-black rounded-xl text-[10px] uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                            <Wand2 className="w-3.5 h-3.5" /> Next Tip
+                        </button>
                     </div>
                 </div>
             </div>
-
 
             {/* Streak card */}
             <div
@@ -177,9 +142,9 @@ function ParentHomeTab({ userData, navigateTo, displayChild, currentUser }: any)
                                 <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>
                                     <Flame className="w-5 h-5 fill-white text-white drop-shadow-md" />
                                 </motion.div>
-                                <h3 className="font-bold text-lg tracking-wide text-white">Brushing Streak</h3>
+                                <h3 className="font-light text-lg tracking-wide" style={{ color: '#0A1F1F' }}>Brushing Streak</h3>
                             </div>
-                            <p className="text-white/95 text-xs font-medium">Keep encouraging {displayChild.name || 'them'}!</p>
+                            <p className="text-white/95 text-xs font-medium">Keep encouraging {userData.name || 'them'}!</p>
                         </div>
                         <button
                             className="px-4 py-1.5 rounded-full text-[10px] font-bold transition-all bg-white/30 text-white hover:bg-white/40"
@@ -306,74 +271,34 @@ function ParentAlertsTab({ navigateTo, userData }: any) {
 
 // ─── MAIN COMPONENT ────────────────────────────────────────────────
 export function ParentDashboardScreen({ navigateTo, userData }: ScreenProps) {
-    const { signOut, currentUser } = useAuth();
+    const { signOut } = useAuth();
     const [activeTab, setActiveTab] = useState<'home' | 'progress' | 'alerts' | 'settings'>('home');
-    const [children, setChildren] = useState<any[]>([]);
-
-    const fetchChildren = () => {
-        if (currentUser?.uid) {
-            fetch(`${API_URL}/parent/${currentUser.uid}/children`)
-                .then(res => res.json())
-                .then(data => {
-                    // Normalize field names — backend uses 'gold' for stars
-                    const enriched = Array.isArray(data) ? data.map((c: any) => ({
-                        ...c,
-                        stars: c.stars ?? c.gold ?? 0,
-                        level: c.level ?? 1,
-                        health: c.health ?? c.enamel_health ?? 100,
-                        current_streak: c.current_streak ?? 0,
-                        selected_character: c.selected_character ?? c.character ?? 1,
-                    })) : [];
-                    setChildren(enriched);
-                })
-                .catch(err => console.error("Failed to fetch children:", err));
-        }
-    };
-
-    useEffect(() => {
-        fetchChildren();
-    }, [currentUser?.uid]);
-
-    // Rich mock fallback so parent dashboard always looks populated
-    const MOCK_CHILD = {
-        uid: 'mock_child',
-        name: 'Little Hero',
-        level: 4,
-        gold: 1250,
-        stars: 1250,
-        health: 88,
-        enamel_health: 88,
-        current_streak: 5,
-        selected_character: 1,
-        xp: 820,
-    };
-
-    const displayChild = children[0] || MOCK_CHILD;
 
     const handleSignOut = async () => { await signOut(); navigateTo('signin'); };
     const handleSettings = () => navigateTo('settings');
 
     return (
         <div className="h-full bg-transparent flex flex-col overflow-hidden relative">
+            <AnimatedBackground />
 
 
             <div className="relative flex-none bg-gradient-to-br from-purple-500/90 to-purple-600/90 backdrop-blur-md text-white px-5 pt-5 pb-6 z-50 shadow-xl border-b border-purple-400/30">
-                <div className="flex justify-between items-center mb-5 max-w-7xl mx-auto w-full relative z-[60]">
-                    <button onClick={handleSignOut} className="p-3 -ml-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer relative z-[60] pointer-events-auto">
+                <div className="flex justify-between items-center mb-5 max-w-7xl mx-auto w-full">
+                    <button onClick={handleSignOut} className="p-3 -ml-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer relative z-[60]">
                         <LogOut className="w-7 h-7" />
                     </button>
-                    <h1 className="font-extrabold text-xl text-white drop-shadow-md">Parent Portal</h1>
-                    <button onClick={handleSettings} className="relative p-3 -mr-3 hover:bg-white/20 rounded-xl transition-all cursor-pointer z-[60] pointer-events-auto">
+                    <h1 className="font-extrabold text-xl">Parent Portal</h1>
+                    <button onClick={handleSettings} className="relative p-3 -mr-3 hover:bg-white/20 rounded-xl transition-all cursor-pointer z-[60]">
                         <Settings className="w-7 h-7 text-white" />
                     </button>
                 </div>
 
                 {/* Hero stat card */}
-                <div className="bg-pink-50 rounded-[2rem] p-5 shadow-lg mb-2 relative overflow-hidden border border-pink-100">
+                <div className="bg-white rounded-[2rem] p-5 shadow-lg mb-2 relative overflow-hidden">
                     <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
                         {[...Array(3)].map((_, i) => (
                             <motion.div key={`bubble-${i}`} className="absolute rounded-full blur-3xl mix-blend-multiply"
-                                style={{ background: ['#FFB86C', '#FF6AC1', '#F472B6'][i % 3], opacity: 0.2, width: 160 + i * 30, height: 160 + i * 30, left: i === 0 ? '-10%' : i === 1 ? '40%' : '80%', top: i === 0 ? '-20%' : i === 1 ? '50%' : '-10%' }}
+                                style={{ background: ['#8BE9FD', '#FFB86C', '#FF6AC1'][i % 3], opacity: 0.4, width: 160 + i * 30, height: 160 + i * 30, left: i === 0 ? '-10%' : i === 1 ? '40%' : '80%', top: i === 0 ? '-20%' : i === 1 ? '50%' : '-10%' }}
                                 animate={{ x: [0, 60, 0, -60, 0], y: [0, -60, 0, 60, 0], scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
                                 transition={{ duration: 15 + i * 5, repeat: Infinity, ease: 'linear' }} />
                         ))}
@@ -382,21 +307,19 @@ export function ParentDashboardScreen({ navigateTo, userData }: ScreenProps) {
                         <motion.div whileHover={{ rotate: 5, scale: 1.1 }}
                             animate={{ rotate: [-3, -1, -3], boxShadow: ['0 8px 16px rgba(255,106,193,0.3)', '0 8px 24px rgba(255,106,193,0.6)', '0 8px 16px rgba(255,106,193,0.3)'] }}
                             transition={{ duration: 4, repeat: Infinity }}
-                            className="w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 border-2 border-white overflow-hidden shadow-lg"
+                            className="w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 border-2 border-white overflow-hidden"
                             style={{ background: 'linear-gradient(135deg, #FFB86C 0%, #FF6AC1 100%)' }}>
                             <UserAvatar characterId={userData.selectedCharacter} showBackground={false} className="w-16 h-16 object-cover scale-125 translate-y-2 drop-shadow-2xl" />
                         </motion.div>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-baseline justify-between mb-2">
                                 <div>
-                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: '#F472B6' }}>Guardian of</p>
-                                    <p className="text-4xl font-black leading-none tracking-tighter animate-chromaText uppercase">
-                                        {userData.name?.split(' ')[0] || 'Hero'}
-                                    </p>
+                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: '#4F46E5' }}>Guardian of</p>
+                                    <p className="text-4xl font-black leading-none tracking-tighter" style={{ color: '#1E293B' }}>{userData.name?.split(' ')[0] || 'Hero'}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: '#F472B6' }}>Streak</p>
-                                    <p className="text-lg font-black animate-chromaText">{userData.currentStreak} <span className="text-sm">Days</span></p>
+                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: '#7C3AED' }}>Streak</p>
+                                    <p className="text-lg font-black" style={{ color: '#7C3AED' }}>{userData.currentStreak} <span className="text-sm">Days</span></p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-1 h-3.5 mb-1">
@@ -416,7 +339,7 @@ export function ParentDashboardScreen({ navigateTo, userData }: ScreenProps) {
             {/* ── SCROLLABLE CONTENT ── */}
             <div className="flex-1 overflow-y-auto no-scrollbar px-5 py-6 relative z-10 w-full">
                 <div className="max-w-7xl mx-auto w-full">
-                    {activeTab === 'home' && <ParentHomeTab userData={userData} navigateTo={navigateTo} displayChild={displayChild} currentUser={currentUser} />}
+                    {activeTab === 'home' && <ParentHomeTab userData={userData} navigateTo={navigateTo} />}
                     {activeTab === 'progress' && <ParentProgressTab userData={userData} navigateTo={navigateTo} />}
                     {activeTab === 'alerts' && <ParentAlertsTab userData={userData} navigateTo={navigateTo} />}
                 </div>

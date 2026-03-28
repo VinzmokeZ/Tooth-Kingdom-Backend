@@ -1,0 +1,134 @@
+{
+	"info": {
+		"_postman_id": "tooth-kingdom-adventure-api",
+		"name": "Tooth Kingdom Adventure API",
+		"description": "Collection for testing the Tooth Kingdom Adventure FastAPI Backend.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "API Health",
+			"item": [
+				{
+					"name": "Root Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://127.0.0.1:8000/"
+					}
+				},
+				{
+					"name": "Database Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://127.0.0.1:8000/debug/db"
+					}
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Hero\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"dob\": \"2010-01-01\"\n}"
+						},
+						"url": "http://127.0.0.1:8000/auth/register"
+					}
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": "http://127.0.0.1:8000/auth/login"
+					}
+				},
+				{
+					"name": "Google Login (Mock)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"googleuser@example.com\",\n  \"name\": \"Google User\",\n  \"provider\": \"google\",\n  \"provider_id\": \"123456789\"\n}"
+						},
+						"url": "http://127.0.0.1:8000/auth/google"
+					}
+				},
+				{
+					"name": "Phone Login (Mock)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phone\": \"+1234567890\"\n}"
+						},
+						"url": "http://127.0.0.1:8000/auth/phone"
+					}
+				}
+			]
+		},
+		{
+			"name": "User Data",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://127.0.0.1:8000/users/PASTE_UID_HERE"
+					}
+				},
+				{
+					"name": "Update Data",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Hero\",\n  \"email\": \"test@example.com\",\n  \"userData\": {\n    \"level\": 2,\n    \"totalStars\": 10,\n    \"completedChapters\": 1\n  }\n}"
+						},
+						"url": "http://127.0.0.1:8000/users/PASTE_UID_HERE"
+					}
+				}
+			]
+		}
+	]
+}

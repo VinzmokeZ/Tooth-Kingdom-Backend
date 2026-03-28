@@ -3,8 +3,7 @@ import { ScreenProps } from './types';
 import { ChevronLeft, Star, Lock, Sparkles, BookOpen, Flame, Target } from 'lucide-react';
 import { TransparentImage } from '../common/TransparentImage';
 import { AnimatedBackground } from '../AnimatedBackground';
-import { useAuth, API_URL } from '../../context/AuthContext';
-import { useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 const rewards = [
   { id: 1, name: 'Golden Crown', thumbnail: '/thumbnails/reward_golden_crown.png', stars: 0, unlocked: true, equipped: true },
@@ -22,7 +21,6 @@ const rewards = [
 export function RewardsScreen({ navigateTo, userData, updateUserData }: ScreenProps) {
   const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'all' | 'unlocked'>('all');
-  const [unlockedIds, setUnlockedIds] = useState<number[]>([]);
 
   const handleBack = () => {
     if (currentUser?.role === 'parent') navigateTo('parent-dashboard');
@@ -30,43 +28,20 @@ export function RewardsScreen({ navigateTo, userData, updateUserData }: ScreenPr
     else navigateTo('dashboard');
   };
 
-  useEffect(() => {
-    if (currentUser?.uid) {
-        fetch(`${API_URL}/users/${currentUser.uid}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.gameStats?.unlocked_rewards) {
-                    setUnlockedIds(JSON.parse(data.gameStats.unlocked_rewards));
-                }
-            })
-            .catch(err => console.error("Failed to fetch rewards:", err));
-    }
-  }, [currentUser]);
-
   const filteredRewards = rewards.map(reward => {
-    const isUnlocked = unlockedIds.includes(reward.id) || reward.stars === 0;
-    const isEquipped = userData.selectedCharacter === reward.id;
+    const isUnlocked = userData.unlockedRewards.includes(reward.id) || reward.stars === 0;
+    const isEquipped = userData.selectedCharacter === reward.id; // Using as simplified equipment for now
     return { ...reward, unlocked: isUnlocked, equipped: isEquipped };
   }).filter(r => activeTab === 'all' || r.unlocked);
 
-  const handleAction = async (reward: any) => {
+  const handleAction = (reward: any) => {
     if (reward.unlocked) {
       updateUserData({ selectedCharacter: reward.id });
     } else if (userData.totalStars >= reward.stars) {
-      try {
-        const res = await fetch(`${API_URL}/rewards/unlock?uid=${currentUser?.uid}&reward_id=${reward.id}&cost=${reward.stars}`, {
-            method: 'POST'
-        });
-        const data = await res.json();
-        if (data.success) {
-            setUnlockedIds(prev => [...prev, reward.id]);
-            updateUserData({
-                totalStars: userData.totalStars - reward.stars
-            });
-        }
-      } catch (e) {
-        console.error("Unlock failed:", e);
-      }
+      updateUserData({
+        totalStars: userData.totalStars - reward.stars,
+        unlockedRewards: [...userData.unlockedRewards, reward.id]
+      });
     }
   };
 
@@ -113,7 +88,7 @@ export function RewardsScreen({ navigateTo, userData, updateUserData }: ScreenPr
               : 'text-white/70 hover:text-white'
               }`}
           >
-            Unlocked ({unlockedIds.length})
+            Unlocked ({userData.unlockedRewards.length})
           </button>
         </div>
       </div>

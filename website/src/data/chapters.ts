@@ -94,8 +94,8 @@ export const chapters: Chapter[] = [
     },
     {
         id: 6,
-        title: 'Battle Dentist',
-        description: 'Join the last Battle Dentist in a retro-style quest to defend the kingdom from dental decay! Use your tools to blast away the grime.',
+        title: 'Beatrix: Battle Dentist',
+        description: 'Join Beatrix, the last Battle Dentist, in a retro-style quest to defend the kingdom from dental decay! Use your tools to blast away the grime.',
         lessons: 4,
         stars: 12,
         completed: false,

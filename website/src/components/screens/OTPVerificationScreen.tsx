@@ -3,8 +3,9 @@ import { ScreenProps } from './types';
 import { ArrowLeft, Shield, Sparkles, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { USE_LOCAL_BACKEND } from '../../lib/firebase';
+import { AnimatedBackground } from '../AnimatedBackground';
 
-export function OTPVerificationScreen({ navigateTo, userData }: ScreenProps) {
+export function OTPVerificationScreen({ navigateTo }: ScreenProps) {
   const { confirmationResult, verifyOTPLocal, sendOTPLocal } = useAuth();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -12,9 +13,6 @@ export function OTPVerificationScreen({ navigateTo, userData }: ScreenProps) {
   const [resendTimer, setResendTimer] = useState(10);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [mockSMS, setMockSMS] = useState<{ phone: string, code: string } | null>(null);
-
-  console.log('[DEBUG] OTPVerificationScreen - Initial Render');
-  console.log('[DEBUG] OTPVerificationScreen - userData available:', !!userData);
 
   useEffect(() => {
     // Focus first input on mount
@@ -34,7 +32,7 @@ export function OTPVerificationScreen({ navigateTo, userData }: ScreenProps) {
 
   useEffect(() => {
     // Redirect if no confirmation result (hero tried to jump link)
-    if (!confirmationResult && !import.meta.env.DEV && !USE_LOCAL_BACKEND) {
+    if (!confirmationResult && process.env.NODE_ENV === 'production' && !USE_LOCAL_BACKEND) {
       navigateTo('signin');
     }
 
@@ -77,35 +75,23 @@ export function OTPVerificationScreen({ navigateTo, userData }: ScreenProps) {
 
     try {
       if (USE_LOCAL_BACKEND) {
-        setIsVerifying(true);
-        // Add artificial delay for feel
-        setTimeout(async () => {
-          const storedOTP = localStorage.getItem('mockOTP');
-          if (otp.join('') === storedOTP || (otp.join('') === '123456')) {
-            const phone = localStorage.getItem('mockOTPPhone') || 'local-hero';
-            const success = await verifyOTPLocal(phone, otp.join(''));
-            if (success) {
-              // Navigation logic based on role ( bridge from SignIn )
-              const pendingRole = localStorage.getItem('pending_role');
-              
-              if (pendingRole === 'parent') {
-                navigateTo('parent-dashboard');
-              } else if (pendingRole === 'teacher') {
-                navigateTo('teacher-dashboard');
-              } else {
-                navigateTo('onboarding');
-              }
-              
-              localStorage.removeItem('pending_role'); // Clean up
-              localStorage.removeItem('mockOTP');
-            } else {
-              setError("Verification failed. Please try again.");
-            }
-          } else {
-            setError("Invalid verification code. Try 123456 or check notification.");
+        const phone = (window as any).localOTPPhone || 'Hero';
+        await verifyOTPLocal(phone, codeToVerify);
+
+        // Role-based navigation after mock verification
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          if (user.role === 'parent') {
+            navigateTo('parent-dashboard');
+            return;
+          } else if (user.role === 'teacher') {
+            navigateTo('teacher-dashboard');
+            return;
           }
-          setIsVerifying(false);
-        }, 1500);
+        }
+
+        navigateTo('onboarding');
         return;
       }
 
@@ -134,27 +120,21 @@ export function OTPVerificationScreen({ navigateTo, userData }: ScreenProps) {
     // Generate new mock OTP
     const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
     const phone = localStorage.getItem('mockOTPPhone') || 'Hero';
-    let email = null;
-    try {
-        const storedUser = localStorage.getItem('currentUser');
-        if (storedUser) {
-            email = JSON.parse(storedUser).email;
-        }
-    } catch (e) {
-        console.warn("Could not parse currentUser for resend email:", e);
-    }
+    const email = localStorage.getItem('currentUser') 
+      ? JSON.parse(localStorage.getItem('currentUser')!).email 
+      : null;
 
     // Trigger real delivery via backend
     if (USE_LOCAL_BACKEND) {
         const target = email || phone;
         const method = email ? 'email' : 'phone';
-        await sendOTPLocal(target, newOtp, method as any);
+        await sendOTPLocal(target, newOtp, method);
     }
 
     // Update local storage
     localStorage.setItem('mockOTP', newOtp);
 
-    // Show notification
+    // Show notification (Mock SMS)
     setMockSMS({ phone, code: newOtp });
 
     // Reset timer
@@ -165,7 +145,8 @@ export function OTPVerificationScreen({ navigateTo, userData }: ScreenProps) {
   };
 
   return (
-    <div className="flex-1 h-full w-full bg-transparent flex flex-col overflow-hidden relative">
+    <div className="h-full bg-transparent flex flex-col overflow-hidden relative">
+      <AnimatedBackground />
 
       {/* Header */}
       <div className="relative z-10 p-6">

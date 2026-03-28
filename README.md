@@ -20,6 +20,34 @@
 
 ---
 
+## 🖥️ Frontend Setup (Website & Desktop)
+
+The frontend is a React-based web application located in the `/website` directory. It uses Vite for fast development and can be deployed as a standalone website or wrapped in Capacitor for mobile.
+
+### Prerequisites
+- **Node.js** (v18+)
+- **npm** (comes with Node)
+
+### Step 1: Install Dependencies
+```bash
+cd website
+npm install
+```
+
+### Step 2: Configure Backend URL
+Edit `website/.env` to point to your backend:
+```env
+VITE_LOCAL_BACKEND_URL=http://your-server-ip:8010
+```
+
+### Step 3: Run Development Server
+```bash
+npm run dev
+```
+Access the app at `http://localhost:5173`.
+
+---
+
 ## Server Deployment Guide
 
 > **For the server admin**: Follow these steps to deploy the backend and provide the team with the live URL.

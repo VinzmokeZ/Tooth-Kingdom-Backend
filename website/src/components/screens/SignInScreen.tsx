@@ -18,9 +18,10 @@ import {
 } from 'firebase/auth';
 
 import { doc, setDoc } from 'firebase/firestore';
-import { auth, db, USE_LOCAL_BACKEND, LOCAL_BACKEND_URL } from '../../lib/firebase';
+import { auth, db, USE_LOCAL_BACKEND } from '../../lib/firebase';
 import { NativeBiometric } from 'capacitor-native-biometric';
 import { useAuth } from '../../context/AuthContext';
+import { AnimatedBackground } from '../AnimatedBackground';
 
 
 export function SignInScreen({ navigateTo }: ScreenProps) {
@@ -97,9 +98,9 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
 
     try {
       if (USE_LOCAL_BACKEND) {
-        // Save role for redirection bridge
-        localStorage.setItem('pending_role', role);
-        
+        // For mock mode, save the selected role to localStorage so verifyOTPLocal can find it
+        localStorage.setItem('currentUser', JSON.stringify({ role }));
+
         const code = await signInWithPhoneLocal(phone);
         // Show mock SMS notification
         setMockSMS({ phone, code });
@@ -146,12 +147,8 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
             setError("Please enter your date of birth!");
             return;
           }
-        }
 
-        // Save role to localStorage for OTP redirection bridge (for local backend mode)
-        localStorage.setItem('pending_role', role);
-        
-        if (isSignUp) {
+          // Pass DOB and Role to registerLocal
           await registerLocal(name, email, password, dob, role);
         } else {
           await loginWithEmailPasswordLocal(email, password);
@@ -287,11 +284,8 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
 
 
   return (
-    <div className="flex-1 h-full w-full bg-transparent flex flex-col overflow-y-auto relative transition-colors duration-500 touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
-      {/* Decorative elements */}
-      <div className="absolute top-10 left-10 w-20 h-20 bg-purple-300 dark:bg-purple-900/30 rounded-full opacity-30 blur-2xl"></div>
-      <div className="absolute bottom-20 right-10 w-32 h-32 bg-pink-300 dark:bg-pink-900/30 rounded-full opacity-30 blur-2xl"></div>
-      <div className="absolute top-1/3 right-20 w-16 h-16 bg-cyan-300 dark:bg-cyan-900/30 rounded-full opacity-30 blur-xl"></div>
+    <div className="h-full bg-gradient-to-br from-purple-100 via-pink-50 to-cyan-50 dark:from-gray-900 dark:via-purple-950 dark:to-black flex flex-col overflow-y-auto relative transition-colors duration-500">
+      <AnimatedBackground />
 
       {/* Floating tooth icons */}
       <div className="absolute top-20 right-16 text-6xl animate-float-slow opacity-40 dark:opacity-20">🦷</div>
@@ -305,7 +299,7 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
         >
           <div className="bg-black/90 backdrop-blur-xl rounded-[24px] p-4 border border-white/20 shadow-2xl flex items-center gap-4">
             <div className="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl">💬</span>
+              <MessageSquare className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
               <div className="flex justify-between items-center mb-0.5">
@@ -320,18 +314,23 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
               onClick={() => setMockSMS(null)}
               className="p-1 hover:bg-white/10 rounded-full"
             >
-              <span className="text-white/40 font-bold">✕</span>
+              <Lock className="w-4 h-4 text-white/40" />
             </button>
+          </div>
+          {/* Slide indicator pill */}
+          <div className="flex justify-center mt-2">
+            <div className="w-10 h-1bg-white/20 rounded-full"></div>
           </div>
         </div>
       )}
 
-      <div className="flex-1 flex items-center justify-center p-6 relative z-10">
-        <div className="w-full max-w-md mt-[-2rem]">
+      <div className="flex-1 flex items-center justify-center p-6 relative">
+        <AnimatedBackground />
+        <div className="w-full max-w-2xl space-y-6 relative z-10 py-8">
           {/* Logo/Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center mb-4">
-              <img src={logoImage} alt="Tooth Kingdom Logo" className="w-64 h-auto drop-shadow-2xl transition-all hover:scale-105" />
+              <img src={logoImage} alt="Tooth Kingdom Logo" className="w-64 h-auto drop-shadow-2xl transform hover:scale-105 transition-transform" />
             </div>
             <p className="text-gray-600 dark:text-gray-300 text-base font-medium">
               Join the adventure to save smiles! 🌟
@@ -399,9 +398,10 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
                     </div>
                   </div>
 
-                  <div className="mb-6">
-                    <label className="block text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 px-1">
-                      Choose Your Path
+                  {/* Role Selection */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                      I am a...
                     </label>
                     <div className="grid grid-cols-3 gap-3">
                       {[
@@ -413,14 +413,13 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
                           key={r.id}
                           type="button"
                           onClick={() => setRole(r.id as any)}
-                          className={`flex flex-col items-center justify-center p-3.5 rounded-[1.5rem] border-2 transition-all active-pop ${
-                            role === r.id
-                              ? `bg-white dark:bg-${r.color}-900/30 border-${r.color}-500 text-${r.color}-600 dark:text-${r.color}-400 shadow-lg scale-105 z-10`
-                              : 'bg-gray-50/50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-400 hover:border-gray-200'
-                          }`}
+                          className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all ${role === r.id
+                            ? `bg-${r.color}-50 dark:bg-${r.color}-900/30 border-${r.color}-500 text-${r.color}-600 dark:text-${r.color}-400`
+                            : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-400'
+                            }`}
                         >
-                          <r.icon className={`w-6 h-6 mb-1.5 ${role === r.id ? `text-${r.color}-500` : 'text-gray-400'}`} />
-                          <span className="text-[10px] font-black uppercase tracking-wider">{r.label}</span>
+                          <r.icon className={`w-5 h-5 mb-1 ${role === r.id ? `text-${r.color}-500` : 'text-gray-400'}`} />
+                          <span className="text-[10px] font-bold uppercase tracking-wider">{r.label}</span>
                         </button>
                       ))}
                     </div>
@@ -646,16 +645,16 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
           {/* AI Authentication Options */}
           <div className="bg-gradient-to-r from-cyan-500 to-purple-500 rounded-3xl shadow-2xl p-1 mt-6">
             <div className="bg-white dark:bg-gray-900 rounded-[22px] p-6">
-              <div className="flex flex-col items-center gap-3 mb-6">
+              <div className="flex flex-col items-center gap-2 mb-4">
                 <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-400 rounded-xl flex items-center justify-center shadow-md">
                   <span className="text-xl">🤖</span>
                 </div>
-                <h3 className="font-black text-xl text-gray-900 dark:text-white text-center">AI-Powered Login</h3>
-                <div className="px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-bold rounded-full flex items-center">
+                <h3 className="font-black text-lg text-gray-900 dark:text-white text-center">AI-Powered Login</h3>
+                <div className="px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-400 text-white text-[10px] font-bold rounded-full flex items-center">
                   <img
                     src={logoImage}
                     alt="Tooth Kingdom"
-                    className="w-12 h-6 object-contain drop-shadow-md"
+                    className="w-10 h-5 object-contain drop-shadow-md"
                   />
                 </div>
               </div>
@@ -700,27 +699,27 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
               </div>
 
               {/* 2FA Toggle - Centered */}
-              <div className="mt-5 pt-5 border-t-2 border-gray-100 dark:border-gray-800 flex flex-col items-center gap-4">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-400 rounded-xl flex items-center justify-center shadow-sm">
-                    <span className="text-lg">🛡️</span>
+              <div className="mt-4 pt-4 border-t-2 border-gray-100 dark:border-gray-800 flex items-center justify-between w-full px-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-400 rounded-lg flex items-center justify-center shadow-sm">
+                    <span className="text-sm">🛡️</span>
                   </div>
-                  <div className="text-center">
-                    <p className="text-sm font-black text-gray-900 dark:text-white">2FA Security</p>
-                    <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Extra protection with OTP</p>
+                  <div>
+                    <p className="text-xs font-black text-gray-900 dark:text-white">2FA Security</p>
+                    <p className="text-[8px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Extra protection</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setUse2FA(!use2FA)}
-                  className={`relative w-14 h-7 rounded-full transition-all shadow-inner ${use2FA ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gray-300 dark:bg-gray-600'
+                  className={`relative w-12 h-6 rounded-full transition-all shadow-inner ${use2FA ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gray-300 dark:bg-gray-600'
                     }`}
                 >
                   <div
-                    className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform flex items-center justify-center ${use2FA ? 'translate-x-7' : 'translate-x-0'
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform flex items-center justify-center ${use2FA ? 'translate-x-6' : 'translate-x-0'
                       }`}
                   >
-                    <div className={`w-1 h-3 rounded-full ${use2FA ? 'bg-green-500' : 'bg-gray-200'}`}></div>
+                    <div className={`w-1 h-2 rounded-full ${use2FA ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                   </div>
                 </button>
               </div>
@@ -728,8 +727,8 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
           </div>
 
           {/* Bottom text */}
-          <p className="text-center text-[11px] text-gray-500 dark:text-gray-400 mt-6 px-4 leading-relaxed">
-            By continuing, you agree to our <button type="button" onClick={() => navigateTo('privacy')} className="text-purple-600 underline">Privacy Policy</button> and <button type="button" onClick={() => navigateTo('delete-account')} className="text-purple-600 underline">Data Deletion Rights</button>.
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+            By continuing, you agree to our Terms & Privacy Policy
           </p>
 
           {/* Invisible Recaptcha */}
@@ -741,38 +740,20 @@ export function SignInScreen({ navigateTo }: ScreenProps) {
       <style dangerouslySetInnerHTML={{
         __html: `
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(10deg);
-  }
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(10deg); }
 }
 @keyframes float-slow {
-  0%, 100% {
-    transform: translateY(0px) rotate(-5deg);
-  }
-  50% {
-    transform: translateY(-30px) rotate(5deg);
-  }
+  0%, 100% { transform: translateY(0px) rotate(-5deg); }
+  50% { transform: translateY(-30px) rotate(5deg); }
 }
 @keyframes float-delayed {
-  0%, 100% {
-    transform: translateY(0px) scale(1);
-  }
-  50% {
-    transform: translateY(-25px) scale(1.1);
-  }
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-25px) scale(1.1); }
 }
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-.animate-float-slow {
-  animation: float-slow 6s ease-in-out infinite;
-}
-.animate-float-delayed {
-  animation: float-delayed 5s ease-in-out infinite 1s;
-}
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+.animate-float-delayed { animation: float-delayed 5s ease-in-out infinite 1s; }
 ` }} />
     </div>
   );

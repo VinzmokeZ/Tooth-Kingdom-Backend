@@ -5,11 +5,10 @@ import { chapters } from '../../data/chapters';
 import { GameEngine } from '../games/GameEngine';
 import { useGame } from '../../context/GameContext';
 import { rpgService } from '../../services/rpgService';
-import { useAuth, API_URL } from '../../context/AuthContext';
+import { AnimatedBackground } from '../AnimatedBackground';
 
 export function ChaptersScreen({ navigateTo, userData }: ScreenProps) {
   const { updateUserData } = useGame();
-  const { currentUser } = useAuth();
   const [activeChapterId, setActiveChapterId] = useState<number | null>(null);
 
   const handleStartChapter = (chapterId: number) => {
@@ -20,9 +19,10 @@ export function ChaptersScreen({ navigateTo, userData }: ScreenProps) {
     setActiveChapterId(null);
   };
 
-  const handleGameComplete = async (score: number, stars: number) => {
-    // 1. Update local state (offline-first)
+  const handleGameComplete = (score: number, stars: number) => {
+    // Hidden RPG: Track Quest Progress for "Hero's Journey" (Quest ID 1)
     const rpgQuestUpdates = rpgService.trackQuestProgress(userData, 1, 20);
+    // Also reward skill/XP
     const rpgRewards = rpgService.rewardTaskCompletion(userData, 'lesson');
 
     updateUserData({
@@ -37,32 +37,7 @@ export function ChaptersScreen({ navigateTo, userData }: ScreenProps) {
       ...rpgRewards
     });
 
-    // 2. Sync to backend so terminal logs show real chapter completions
-    if (currentUser?.uid && activeChapterId) {
-      const uid = currentUser.uid;
-      try {
-        await fetch(`${API_URL}/game/${uid}/chapter-complete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chapter_id: activeChapterId, stars, score })
-        }).catch(() => {});
-
-        await fetch(`${API_URL}/game/${uid}/xp`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: 75, reason: `completed_chapter_${activeChapterId}` })
-        }).catch(() => {});
-
-        await fetch(`${API_URL}/quests/${uid}/progress`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quest_id: 'complete_chapter', increment: 1 })
-        }).catch(() => {});
-      } catch (e) {
-        // Backend offline — local save already done above
-      }
-    }
-
+    // Also close the game
     setActiveChapterId(null);
     navigateTo('reward-unlocked');
   };
@@ -80,18 +55,19 @@ export function ChaptersScreen({ navigateTo, userData }: ScreenProps) {
   }
 
   return (
-    <div className="h-full bg-transparent flex flex-col relative overflow-hidden transition-colors duration-500">
+    <div className="h-full bg-gradient-to-b from-purple-50 to-white dark:from-gray-900 dark:to-black flex flex-col relative overflow-hidden transition-colors duration-500">
+      <AnimatedBackground />
       {/* Content */}
-      <div className="flex-1 overflow-y-auto relative z-10 native-scroll-fix">
+      <div className="flex-1 overflow-y-auto relative z-10">
         {/* Hero Banner Header (Moved Inside Scroll Area) */}
         <div className="relative h-[300px] md:h-[400px] overflow-hidden shadow-xl z-10">
           <img src="/thumbnails/banner_chapters.png" alt="Chapters Banner" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-purple-700/90 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-8 flex items-center gap-4">
-            <button onClick={() => navigateTo('dashboard')} className="p-3 rounded-2xl bg-white/20 backdrop-blur-md text-white hover:bg-white/40 transition-all shadow-lg animate-float hover:-translate-x-1 relative z-[60] pointer-events-auto cursor-pointer">
-              <ChevronLeft className="w-5 h-5" />
+            <button onClick={() => navigateTo('dashboard')} className="p-3 rounded-2xl bg-white/20 backdrop-blur-md text-white hover:bg-white/40 transition-all shadow-lg animate-float hover:-translate-x-1">
+              <ChevronLeft className="w-8 h-8" />
             </button>
-            <h1 className="text-2xl font-black text-white drop-shadow-lg tracking-tight uppercase">Kingdom Map</h1>
+            <h1 className="text-4xl font-black text-white drop-shadow-lg tracking-tight uppercase">Kingdom Map</h1>
           </div>
         </div>
 

@@ -1,12 +1,12 @@
 {
-      "name": "tooth-kingdom-adventure",
+      "name": "tooth-kingdom-adventure-web",
       "version": "0.1.0",
       "private": true,
       "dependencies": {
             "@capacitor/android": "^8.0.2",
-            "@capacitor/app": "^6.0.0",
-            "@capacitor/browser": "^6.0.6",
-            "@mediapipe/tasks-vision": "^0.10.14",
+            "@capacitor/cli": "^6.2.1",
+            "@capacitor/core": "^8.0.2",
+            "@mediapipe/tasks-vision": "^0.10.32",
             "@radix-ui/react-accordion": "^1.2.3",
             "@radix-ui/react-alert-dialog": "^1.1.6",
             "@radix-ui/react-aspect-ratio": "^1.1.2",
@@ -44,6 +44,8 @@
             "kalidokit": "^1.1.5",
             "lucide-react": "^0.487.0",
             "next-themes": "^0.4.6",
+            "pixi-live2d-display": "^0.4.0",
+            "pixi.js": "^7.4.2",
             "react": "^18.3.1",
             "react-day-picker": "^8.10.1",
             "react-dom": "^18.3.1",
@@ -52,22 +54,19 @@
             "recharts": "^2.15.2",
             "sonner": "^2.0.3",
             "tailwind-merge": "*",
-            "tailwindcss": "*",
+            "tooth-kingdom-adventure-web": "file:../Frontend - Backup/Tooth Kingdom Adventure Wireframe",
             "vaul": "^1.1.2"
       },
       "devDependencies": {
-            "@capacitor/cli": "^6.2.1",
-            "@capacitor/core": "^6.0.0",
             "@types/node": "^20.10.0",
             "@types/react": "^18.3.0",
             "@types/react-dom": "^18.3.0",
-            "@vitejs/plugin-react-swc": "^3.10.2",
+            "@vitejs/plugin-react": "^4.7.0",
             "typescript": "^5.9.3",
-            "vite": "5.4.14"
+            "vite": "^6.0.0"
       },
       "scripts": {
             "dev": "vite",
-            "build": "vite build",
-            "preview": "vite preview"
+            "build": "vite build"
       }
 }

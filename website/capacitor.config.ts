@@ -1,10 +1,13 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.toothkingdom.adventure',
-  appName: 'Tooth Kingdom Adventure',
-  webDir: 'dist',
-  bundledWebRuntime: false
+    appId: 'Tooth.Kingdom.Adventure',
+    appName: 'Tooth Kingdom Adventure',
+    webDir: 'build',
+    bundledWebRuntime: false,
+    server: {
+        cleartext: true
+    }
 };
 
 export default config;

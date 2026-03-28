@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ScreenProps } from './types';
-import { User, ChevronRight, Sparkles, GraduationCap, Heart, Check } from 'lucide-react';
+import { User, ChevronRight, Sparkles } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
+import { AnimatedBackground } from '../AnimatedBackground';
 
 const onboardingSteps = [
   {
@@ -27,22 +28,14 @@ const onboardingSteps = [
 export function OnboardingScreen({ navigateTo }: ScreenProps) {
   const { userData, updateUserData } = useGame();
 
-  // Safety check to prevent white screen if context is not ready
-  if (!userData) {
-    console.warn('[SCREEN] OnboardingScreen - userData is missing, waiting...');
-    return <div className="flex-1 h-full w-full bg-white flex items-center justify-center p-8 text-gray-400 font-bold">Loading Hero Kingdom...</div>;
-  }
-
   // Determine if we need to show the Name Entry screen
   // If name is one of the defaults, we force the user to enter a name
   const defaults = ['Champion', 'Hero', 'Mobile Hero'];
-  const [showNameScreen, setShowNameScreen] = useState(defaults.includes(userData?.name || ''));
+  const [showNameScreen, setShowNameScreen] = useState(defaults.includes(userData.name || ''));
   const [heroName, setHeroName] = useState('');
 
   const [step, setStep] = useState(0);
   const currentStep = onboardingSteps[step];
-
-  console.log('[DEBUG] OnboardingScreen - Step:', step, 'showNameScreen:', showNameScreen);
 
   const handleNameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,20 +56,20 @@ export function OnboardingScreen({ navigateTo }: ScreenProps) {
   // ----------------------------------------------------
   // RENDER: NAME ENTRY SCREEN
   // ----------------------------------------------------
-  // ----------------------------------------------------
   if (showNameScreen) {
     return (
-      <div className="flex-1 h-full w-full flex flex-col items-center p-6 relative overflow-y-auto bg-transparent touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="w-full max-w-sm bg-white/95 backdrop-blur-md rounded-[3rem] shadow-2xl p-8 border-2 border-purple-100 animate-slideUp z-10 text-center absolute top-20">
-          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl transform -rotate-6">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <AnimatedBackground />
+        <div className="w-full max-w-2xl bg-white/90 backdrop-blur-md rounded-3xl shadow-xl p-10 border-2 border-purple-100 animate-slideUp relative z-10">
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-200">
             <User className="w-10 h-10 text-white" />
           </div>
 
-          <h2 className="text-2xl font-black text-gray-900 mb-2 uppercase tracking-tight">
+          <h2 className="text-2xl font-extrabold text-center text-gray-900 mb-2">
             Welcome, Hero!
           </h2>
-          <p className="text-gray-500 mb-8 font-bold text-sm leading-tight">
-            Every hero needs a name.<br />What should we call you?
+          <p className="text-center text-gray-500 mb-8">
+            Every hero needs a name. What should we call you?
           </p>
 
           <form onSubmit={handleNameSubmit} className="space-y-6">
@@ -85,8 +78,8 @@ export function OnboardingScreen({ navigateTo }: ScreenProps) {
                 type="text"
                 value={heroName}
                 onChange={(e) => setHeroName(e.target.value)}
-                placeholder="Enter your hero name"
-                className="w-full px-5 py-4 pl-12 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all text-lg font-black text-gray-800 placeholder-gray-400 shadow-inner"
+                placeholder="Enter your name"
+                className="w-full px-5 py-4 pl-12 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-lg font-bold text-gray-800 placeholder-gray-400"
                 autoFocus
                 required
               />
@@ -96,7 +89,7 @@ export function OnboardingScreen({ navigateTo }: ScreenProps) {
             <button
               type="submit"
               disabled={heroName.trim().length === 0}
-              className={`w-full py-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-black rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all text-lg flex items-center justify-center gap-2 uppercase tracking-widest ${heroName.trim().length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+              className={`w-full py-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-lg flex items-center justify-center gap-2 ${heroName.trim().length === 0 ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
             >
               Start Adventure
@@ -112,7 +105,8 @@ export function OnboardingScreen({ navigateTo }: ScreenProps) {
   // RENDER: TUTORIAL / ONBOARDING
   // ----------------------------------------------------
   return (
-    <div className="flex-1 h-full w-full bg-transparent flex flex-col relative overflow-y-auto touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="h-full bg-transparent flex flex-col relative overflow-hidden">
+      <AnimatedBackground />
 
       {/* Skip button */}
       <div className="p-5 flex justify-end relative z-10">

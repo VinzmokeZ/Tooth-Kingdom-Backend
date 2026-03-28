@@ -6,53 +6,12 @@ import { GameProvider, useGame } from './context/GameContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, useTheme } from 'next-themes';
 import { Star, Heart, Award, Coins } from 'lucide-react';
-import { App as CapacitorApp, URLOpenListenerEvent } from '@capacitor/app';
 import { LOCAL_BACKEND_URL } from './lib/firebase';
 import { useSound } from './hooks/useSound';
-import { AnimatedBackground } from './components/AnimatedBackground';
 
 // Inner component to handle screen state, now that data is in Context
-const AppContent = ({ isWebPreview }: { isWebPreview: boolean }) => {
+const AppContent = () => {
   const [currentScreen, setCurrentScreen] = useState<string>('splash');
-  
-  // Deep Link Listener for Wireless IP Sync
-  useEffect(() => {
-    const setupDeepLink = async () => {
-      CapacitorApp.addListener('appUrlOpen', (data: URLOpenListenerEvent) => {
-        console.log('[DEEP LINK] Received URL:', data.url);
-        try {
-          // Pattern: toothkingdom://set-ip?ip=192.168.1.5
-          const url = new URL(data.url);
-          if (url.host === 'set-ip') {
-            const ip = url.searchParams.get('ip');
-            if (ip) {
-              console.log('[DEEP LINK] Syncing Backend IP:', ip);
-              localStorage.setItem('BACKEND_IP_OVERRIDE', ip);
-              // Force reload to apply new IP in firebase.ts
-              window.location.reload();
-            }
-          }
-        } catch (e) {
-          console.error('[DEEP LINK] Invalid URL received:', data.url);
-        }
-      });
-    };
-    setupDeepLink();
-  }, []);
-
-  // v4.2: URL Route Detection (Privacy/Delete URLs)
-  useEffect(() => {
-    const path = window.location.pathname.toLowerCase();
-    const params = new URLSearchParams(window.location.search);
-    const screenParam = params.get('screen')?.toLowerCase();
-
-    if (path === '/privacy' || screenParam === 'privacy') {
-      setCurrentScreen('privacy');
-    } else if (path === '/delete-account' || screenParam === 'delete-account' || screenParam === 'delete') {
-      setCurrentScreen('delete-account');
-    }
-  }, []);
-
   const { userData, updateUserData } = useGame();
   const { theme, setTheme } = useTheme();
   const { currentUser, loading: authLoading } = useAuth();
@@ -65,36 +24,36 @@ const AppContent = ({ isWebPreview }: { isWebPreview: boolean }) => {
 
   // Global Reward Animation State
   const [rewardFeedback, setRewardFeedback] = useState<{ type: 'xp' | 'gold' | 'health' | 'reward', amount?: number, name?: string } | null>(null);
-  const lastXp = useRef(userData?.xp || 0);
-  const lastGold = useRef(userData?.gold || 0);
-  const lastHealth = useRef(userData?.enamelHealth || 100);
-  const lastUnlockedCount = useRef(userData?.unlockedRewards?.length || 0);
-  const lastLevel = useRef(userData?.level || 1);
+  const lastXp = useRef(userData.xp);
+  const lastGold = useRef(userData.gold);
+  const lastHealth = useRef(userData.enamelHealth);
+  const lastUnlockedCount = useRef(userData.unlockedRewards.length);
+  const lastLevel = useRef(userData.level);
 
   // Global Reward Listener
   useEffect(() => {
-    if ((userData?.xp || 0) > lastXp.current) {
-      setRewardFeedback({ type: 'xp', amount: (userData?.xp || 0) - lastXp.current });
+    if (userData.xp > lastXp.current) {
+      setRewardFeedback({ type: 'xp', amount: userData.xp - lastXp.current });
       playSound('success');
-      lastXp.current = userData?.xp || 0;
+      lastXp.current = userData.xp;
     }
-    if ((userData?.gold || 0) > (lastGold.current || 0)) {
-      setRewardFeedback({ type: 'gold', amount: (userData?.gold || 0) - (lastGold.current || 0) });
+    if ((userData.gold || 0) > (lastGold.current || 0)) {
+      setRewardFeedback({ type: 'gold', amount: (userData.gold || 0) - (lastGold.current || 0) });
       playSound('success');
-      lastGold.current = userData?.gold || 0;
+      lastGold.current = userData.gold;
     }
-    if ((userData?.enamelHealth || 100) > lastHealth.current) {
-      setRewardFeedback({ type: 'health', amount: (userData?.enamelHealth || 100) - lastHealth.current });
-      lastHealth.current = userData?.enamelHealth || 100;
+    if (userData.enamelHealth > lastHealth.current) {
+      setRewardFeedback({ type: 'health', amount: userData.enamelHealth - lastHealth.current });
+      lastHealth.current = userData.enamelHealth;
     }
-    if ((userData?.unlockedRewards?.length || 0) > lastUnlockedCount.current) {
+    if (userData.unlockedRewards.length > lastUnlockedCount.current) {
       setRewardFeedback({ type: 'reward', name: 'New Reward Unlocked!' });
       playSound('achievement');
-      lastUnlockedCount.current = userData?.unlockedRewards?.length || 0;
+      lastUnlockedCount.current = userData.unlockedRewards.length;
     }
-    if ((userData?.level || 1) > lastLevel.current) {
+    if (userData.level > lastLevel.current) {
       playSound('levelUp');
-      lastLevel.current = userData?.level || 1;
+      lastLevel.current = userData.level;
     }
 
     if (rewardFeedback) {
@@ -106,7 +65,7 @@ const AppContent = ({ isWebPreview }: { isWebPreview: boolean }) => {
   // Sync with Backend on login
   useEffect(() => {
     const syncWithBackend = async () => {
-      if (currentUser && currentUser.uid !== 'undefined' && lastSyncId !== currentUser.uid && !authLoading) {
+      if (currentUser && lastSyncId !== currentUser.uid && !authLoading) {
         try {
           console.log('[SYNC] Fetching user data from backend for:', currentUser.uid);
           const response = await fetch(`${LOCAL_BACKEND_URL}/users/${currentUser.uid}`);
@@ -130,7 +89,7 @@ const AppContent = ({ isWebPreview }: { isWebPreview: boolean }) => {
   useEffect(() => {
     const pushToBackend = async () => {
       // Only sync if we have a valid lastSyncId matching current user
-      if (currentUser && currentUser.uid !== 'undefined' && lastSyncId === currentUser.uid) {
+      if (currentUser && lastSyncId === currentUser.uid) {
         if (userData.selectedCharacter !== null) {
           try {
             await fetch(`${LOCAL_BACKEND_URL}/users/${currentUser.uid}`, {
@@ -173,7 +132,7 @@ const AppContent = ({ isWebPreview }: { isWebPreview: boolean }) => {
           return () => clearTimeout(timer);
         } else {
           // If on a protected screen (not in public list), force redirect to signin
-          const publicScreens = ['splash', 'signin', 'otp-verification', 'onboarding', 'character-select', 'privacy', 'delete-account'];
+          const publicScreens = ['splash', 'signin', 'otp-verification', 'onboarding', 'character-select'];
           if (!publicScreens.includes(currentScreen)) {
             setCurrentScreen('signin');
           }
@@ -190,14 +149,12 @@ const AppContent = ({ isWebPreview }: { isWebPreview: boolean }) => {
   }, [setTheme]);
 
   const navigateTo = (screen: string) => {
-    console.log('[NAV] Navigating to:', screen);
     playSound('click');
     setCurrentScreen(screen);
   };
 
   return (
     <>
-      <AnimatedBackground />
       <AppScreens
         currentScreen={currentScreen}
         navigateTo={navigateTo}
@@ -205,7 +162,6 @@ const AppContent = ({ isWebPreview }: { isWebPreview: boolean }) => {
         updateUserData={updateUserData}
         selectedStudent={selectedStudent}
         setSelectedStudent={setSelectedStudent}
-        isWebPreview={isWebPreview}
       />
 
       {/* Global Reward Popup Overlay */}
@@ -246,42 +202,50 @@ const AppContent = ({ isWebPreview }: { isWebPreview: boolean }) => {
         />
       )}
 
+      {/* DEV ONLY: Quick Role Switcher */}
+      <div className="fixed bottom-4 left-4 z-[9999] flex flex-col gap-2">
+        <button
+          onClick={() => {
+            const user = { ...currentUser, role: 'child' } as any;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            window.location.reload();
+          }}
+          className="bg-purple-600 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg opacity-50 hover:opacity-100 transition-opacity"
+        >
+          Child Mode
+        </button>
+        <button
+          onClick={() => {
+            const user = { ...currentUser, role: 'parent' } as any;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            window.location.reload();
+          }}
+          className="bg-indigo-600 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg opacity-50 hover:opacity-100 transition-opacity"
+        >
+          Parent Mode
+        </button>
+        <button
+          onClick={() => {
+            const user = { ...currentUser, role: 'teacher' } as any;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            window.location.reload();
+          }}
+          className="bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg opacity-50 hover:opacity-100 transition-opacity"
+        >
+          Teacher Mode
+        </button>
+      </div>
     </>
   );
 };
 
 export default function App() {
-  const [isWebPreview, setIsWebPreview] = useState(false);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('view') === 'web') {
-      setIsWebPreview(true);
-      console.log('[VIEW] Web Preview Mode Active');
-    }
-  }, []);
-
-  const isMobileMode = typeof window !== 'undefined' && (
-    (window as any).Capacitor?.isNative || 
-    window.innerWidth < 1024 || 
-    /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent)
-  );
-
   return (
     <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" enableSystem={false}>
-      <div className={`transition-colors duration-500 overflow-hidden flex flex-col ${isMobileMode
-        ? 'w-full h-full min-h-[100dvh] bg-gradient-to-b from-purple-50 to-white'
-        : 'min-h-screen bg-gradient-to-br from-purple-100 via-blue-50 to-pink-100 flex items-center justify-center p-4 sm:p-8'
-        }`}>
+      <div className="w-full h-full min-h-[100dvh] bg-white">
         <AuthProvider>
           <GameProvider>
-            {isMobileMode || isWebPreview ? (
-              <AppContent isWebPreview={isWebPreview} />
-            ) : (
-              <PhoneFrame>
-                <AppContent isWebPreview={isWebPreview} />
-              </PhoneFrame>
-            )}
+            <AppContent />
           </GameProvider>
         </AuthProvider>
       </div>

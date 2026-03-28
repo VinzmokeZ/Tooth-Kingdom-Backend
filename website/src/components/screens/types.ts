@@ -10,7 +10,6 @@ export interface AppNotification {
 }
 
 export interface UserData {
-  uid?: string;
   selectedCharacter: number | null;
   currentStreak: number;
   bestStreak: number;
@@ -23,8 +22,6 @@ export interface UserData {
   brushingLogs: { [date: string]: { morning: boolean; evening: boolean } };
   lastBrushedTimestamp: string | null;
   name?: string;
-  email?: string;
-  phone?: string;
   notifications?: AppNotification[];
   // --- RPG STATS (HIDDEN) ---
   enamelHealth: number; // 0-100

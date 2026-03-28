@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ScreenProps } from './types';
 import { ChevronLeft, Trophy, Star, TrendingUp, Flame, Crown } from 'lucide-react';
-import { useAuth, API_URL } from '../../context/AuthContext';
 import { UserAvatar } from '../common/UserAvatar';
 import { motion } from 'framer-motion';
 
 export function TeacherLeaderboardScreen({ navigateTo, userData }: ScreenProps) {
     const [filter, setFilter] = useState<'stars' | 'streak'>('stars');
-    const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
-    useEffect(() => {
-        fetch(`${API_URL}/leaderboard?filter=${filter}`)
-            .then(res => res.json())
-            .then(data => setLeaderboard(data))
-            .catch(err => console.error("Failed to fetch leaderboard:", err));
-    }, [filter]);
+    const mockLeaderboard = [
+        { id: 4, name: 'Leo Lion', stars: 2100, streak: 45, character: '1' },
+        { id: 2, name: 'Alex Archer', stars: 1450, streak: 30, character: '2' },
+        { id: 6, name: 'Kai Blaze', stars: 1320, streak: 28, character: '3' },
+        { id: 1, name: userData.name || 'Hero', stars: userData.totalStars, streak: userData.currentStreak, character: userData.selectedCharacter },
+        { id: 3, name: 'Luna Light', stars: 890, streak: 12, character: '3' },
+        { id: 5, name: 'Mia Storm', stars: 540, streak: 5, character: '2' },
+    ];
 
-    const sortedLeaderboard = leaderboard.length > 0 ? leaderboard : [];
+    const sortedLeaderboard = [...mockLeaderboard].sort((a, b) => b[filter] - a[filter]);
 
     return (
         <div className="h-full bg-gradient-to-b from-blue-50 to-white flex flex-col relative overflow-hidden">

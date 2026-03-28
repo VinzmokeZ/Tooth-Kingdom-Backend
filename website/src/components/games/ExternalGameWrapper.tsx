@@ -149,29 +149,16 @@ export function ExternalGameWrapper({ url, onComplete, onExit, chapterId }: Exte
 
                 {/* ── MOBILE CONTROLS (Chapter 6 Bridge) ── */}
                 {chapterId === 6 && (
-                    <div 
-                        onContextMenu={(e) => e.preventDefault()}
-                        style={{
-                            position: 'absolute',
-                            inset: 0,
-                            pointerEvents: 'none',
-                            userSelect: 'none',
-                            WebkitUserSelect: 'none',
-                            // @ts-ignore
-                            WebkitTouchCallout: 'none'
-                        }}
-                    >
-                        {/* D-PAD Container */}
+                    <>
                         <div style={{
                             position: 'absolute',
-                            bottom: 40,
-                            left: 30,
+                            bottom: 20,
+                            left: 20,
                             zIndex: 300,
                             display: 'grid',
                             gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: 12,
-                            pointerEvents: 'auto',
-                            touchAction: 'none'
+                            gap: 10,
+                            pointerEvents: 'auto'
                         }}>
                             <div />
                             <ControlButton icon="⬆️" keyCode={38} iframeRef={iframeRef} />
@@ -184,21 +171,19 @@ export function ExternalGameWrapper({ url, onComplete, onExit, chapterId }: Exte
                             <div />
                         </div>
 
-                        {/* Action Buttons Container */}
                         <div style={{
                             position: 'absolute',
-                            bottom: 40,
-                            right: 40,
+                            bottom: 20,
+                            right: 80,
                             zIndex: 300,
                             display: 'flex',
-                            gap: 20,
-                            pointerEvents: 'auto',
-                            touchAction: 'none'
+                            gap: 15,
+                            pointerEvents: 'auto'
                         }}>
                             <ControlButton icon="SPACE" keyCode={32} iframeRef={iframeRef} wide />
                             <ControlButton icon="⚔️" keyCode={90} isClick={true} iframeRef={iframeRef} />
                         </div>
-                    </div>
+                    </>
                 )}
 
                 {/* ── CLAIM button — bottom-right ── */}
@@ -253,8 +238,6 @@ function ControlButton({ icon, keyCode, iframeRef, wide = false, isClick = false
     wide?: boolean;
     isClick?: boolean;
 }) {
-    const [isPressed, setIsPressed] = useState(false);
-
     const dispatchKey = (type: 'keydown' | 'keyup') => {
         if (!iframeRef.current?.contentWindow) return;
         try {
@@ -284,49 +267,27 @@ function ControlButton({ icon, keyCode, iframeRef, wide = false, isClick = false
                 iframeRef.current.contentWindow.document.dispatchEvent(mouseEvent);
             }
         } catch (e) {
-            console.warn('Touch bridge restricted.');
+            console.warn('Touch bridge restricted by cross-origin policy.');
         }
-    };
-
-    const handlePressStart = (e: React.TouchEvent | React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (isPressed) return;
-        setIsPressed(true);
-        dispatchKey('keydown');
-    };
-
-    const handlePressEnd = (e: React.TouchEvent | React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!isPressed) return;
-        setIsPressed(false);
-        dispatchKey('keyup');
     };
 
     return (
         <button
-            onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            }}
-            onTouchStart={handlePressStart}
-            onTouchEnd={handlePressEnd}
-            onTouchCancel={handlePressEnd}
-            onMouseDown={handlePressStart}
-            onMouseUp={handlePressEnd}
-            onMouseLeave={handlePressEnd}
+            onContextMenu={(e) => e.preventDefault()}
+            onTouchStart={(e) => { e.preventDefault(); dispatchKey('keydown'); }}
+            onTouchEnd={(e) => { e.preventDefault(); dispatchKey('keyup'); }}
+            onMouseDown={(e) => { e.preventDefault(); dispatchKey('keydown'); }}
+            onMouseUp={(e) => { e.preventDefault(); dispatchKey('keyup'); }}
             style={{
-                width: wide ? 100 : 70,
-                height: 70,
-                background: isPressed ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.15)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                border: isPressed ? '2px solid #fff' : '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: 20,
+                width: wide ? 80 : 50,
+                height: 50,
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: 12,
                 color: 'white',
-                fontWeight: 900,
-                fontSize: wide ? 14 : 22,
+                fontWeight: 'bold',
+                fontSize: 14,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -335,11 +296,8 @@ function ControlButton({ icon, keyCode, iframeRef, wide = false, isClick = false
                 WebkitUserSelect: 'none',
                 // @ts-ignore
                 WebkitTouchCallout: 'none',
-                touchAction: 'none',
+                touchAction: 'none', // critical: prevents scroll hijack & long-press menu
                 cursor: 'pointer',
-                transform: isPressed ? 'scale(0.92)' : 'scale(1)',
-                transition: 'transform 0.05s, background 0.05s',
-                boxShadow: isPressed ? 'none' : '0 4px 12px rgba(0,0,0,0.3)',
             }}
         >
             {icon}

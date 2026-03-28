@@ -1,52 +1,47 @@
+
+import React, { Component, ErrorInfo, ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// --- Mobile-like Drag to Scroll Helper for Desktop ---
-const isNative = typeof window !== 'undefined' && (window as any).Capacitor?.isNative;
-const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+interface ErrorBoundaryProps { children: ReactNode; }
+interface ErrorBoundaryState { hasError: boolean; error: Error | null; errorInfo: ErrorInfo | null; }
 
-if (typeof window !== 'undefined' && !isNative && !isTouchDevice) {
-  let isDown = false;
-  let startY: number;
-  let scrollTop: number;
-  let activeTarget: HTMLElement | null = null;
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
 
-  window.addEventListener('mousedown', (e) => {
-    const target = (e.target as HTMLElement).closest('.overflow-y-auto');
-    if (!target) return;
-    isDown = true;
-    activeTarget = target as HTMLElement;
-    activeTarget.style.cursor = 'grabbing';
-    activeTarget.style.userSelect = 'none';
-    startY = e.pageY - activeTarget.offsetTop;
-    scrollTop = activeTarget.scrollTop;
-  });
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error, errorInfo: null };
+  }
 
-  window.addEventListener('mouseleave', () => {
-    isDown = false;
-    if (activeTarget) {
-      activeTarget.style.cursor = '';
-      activeTarget.style.userSelect = '';
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+    this.setState({ errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 20, background: '#fdd', color: '#900', height: '100vh', width: '100vw', boxSizing: 'border-box', overflowY: 'auto' }}>
+          <h1 style={{ fontSize: 24, fontWeight: 'bold' }}>React Runtime Crash (White Screen Fix)</h1>
+          <p>Please copy this error and send it to your AI</p>
+          <pre style={{ background: '#fff', padding: 15, borderRadius: 8, marginTop: 15, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+            {this.state.error?.toString()}
+            {'\n\n'}
+            {this.state.errorInfo?.componentStack}
+          </pre>
+        </div>
+      );
     }
-  });
-
-  window.addEventListener('mouseup', () => {
-    isDown = false;
-    if (activeTarget) {
-      activeTarget.style.cursor = '';
-      activeTarget.style.userSelect = '';
-    }
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!isDown || !activeTarget) return;
-    e.preventDefault();
-    const y = e.pageY - activeTarget.offsetTop;
-    const walk = (y - startY) * 1.5; // multiplier for scroll speed
-    activeTarget.scrollTop = scrollTop - walk;
-  });
+    return this.props.children;
+  }
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
-  
+createRoot(document.getElementById("root")!).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);

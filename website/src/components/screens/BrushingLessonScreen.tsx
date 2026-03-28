@@ -41,13 +41,11 @@ const lessonSteps = [
 
 import { rpgService } from '../../services/rpgService';
 import { useRef, useEffect, useCallback } from 'react';
-import { useAuth, API_URL } from '../../context/AuthContext';
 
 export function BrushingLessonScreen({ navigateTo, userData, updateUserData }: ScreenProps) {
   const [step, setStep] = useState(0);
   const { playSound } = useSound();
   const currentStep = lessonSteps[step];
-  const { currentUser } = useAuth();
 
   // --- GLOBAL GAME ENGINE STATE ---
   const [timeLeft, setTimeLeft] = useState(30);
@@ -94,52 +92,21 @@ export function BrushingLessonScreen({ navigateTo, userData, updateUserData }: S
         brushRef.current.style.left = `${pos.x * 100}%`;
         brushRef.current.style.top = `${pos.y * 100}%`;
         brushRef.current.style.opacity = '1';
-        brushImgRef.current.style.transform = `scale(0.8) rotate(${Math.sin(Date.now() / 100) * 10 - 20}deg)`;
+        brushImgRef.current.style.transform = `scale(1.2) rotate(${Math.sin(Date.now() / 100) * 15}deg)`;
       } else {
         brushRef.current.style.opacity = '0';
-        brushImgRef.current.style.transform = `scale(0.8) rotate(-20deg)`;
+        brushImgRef.current.style.transform = `scale(1) rotate(0deg)`;
       }
     }
   }, []);
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (step < lessonSteps.length - 1) {
       playSound('click');
       setStep(step + 1);
     } else {
-      // 1. Update local state via rpgService (offline-first)
       const rpgRewards = rpgService.rewardTaskCompletion(userData, 'brush');
       updateUserData(rpgRewards);
-
-      // 2. Sync to backend so logs show the real interaction
-      if (currentUser?.uid) {
-        const uid = currentUser.uid;
-        try {
-          // Log brushing session
-          await fetch(`${API_URL}/game/${uid}/brushing-log`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ duration_seconds: 120, quality_score: 85 })
-          }).catch(() => {});
-
-          // Award XP
-          await fetch(`${API_URL}/game/${uid}/xp`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: 50, reason: 'brushing_lesson_complete' })
-          }).catch(() => {});
-
-          // Mark daily quest progress
-          await fetch(`${API_URL}/quests/${uid}/progress`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ quest_id: 'daily_brush_morning', increment: 1 })
-          }).catch(() => {});
-        } catch (e) {
-          // Backend offline — local save still works
-        }
-      }
-
       navigateTo('lesson-complete');
     }
   };
@@ -213,10 +180,10 @@ export function BrushingLessonScreen({ navigateTo, userData, updateUserData }: S
 
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-2 leading-tight">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-2 leading-tight">
               {currentStep.title}
             </h2>
-            <p className="text-purple-600 font-semibold text-sm">
+            <p className="text-purple-600 font-semibold text-base">
               {currentStep.subtitle}
             </p>
           </div>
@@ -231,11 +198,8 @@ export function BrushingLessonScreen({ navigateTo, userData, updateUserData }: S
             </button>
           )}
           {aiState.audioUnlocked && (
-            <div className="bg-green-500/10 backdrop-blur-md px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border border-green-500/30 text-green-600 shadow-[0_0_15px_rgba(34,197,94,0.3)] shimmer-green">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
+            <div className="bg-green-100 text-green-700 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 border border-green-200">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
               ✨ Voice Active
             </div>
           )}
@@ -285,9 +249,9 @@ export function BrushingLessonScreen({ navigateTo, userData, updateUserData }: S
                 <img
                   ref={brushImgRef}
                   src="/thumbnails/brush.png"
-                  className="w-16 h-16 transition-transform duration-75"
+                  className="w-24 h-24 transition-transform duration-75"
                   style={{
-                    transform: 'scale(0.8) rotate(-20deg)',
+                    transform: 'scale(1) rotate(0deg)',
                     filter: 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.6))'
                   }}
                 />

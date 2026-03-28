@@ -1,25 +1,25 @@
 import React from 'react';
 import { ScreenProps } from './types';
-import { AnimatedBackground } from '../AnimatedBackground';
+import logoImage from '../../assets/0e08d80797dd9be25d0e92064648e8bd56d6c30c.png';
 
 export function SplashScreen({ navigateTo }: ScreenProps) {
-  // Use the specific vibrant logo from public/thumbnails as requested
-  const logoPath = '/thumbnails/0e08d80797dd9be25d0e92064648e8bd56d6c30c.png';
-
   return (
-    <div className="h-full bg-transparent flex flex-col items-center justify-center p-8 relative overflow-hidden">
+    <div className="h-full bg-gradient-to-b from-purple-100 via-blue-50 to-white flex flex-col items-center justify-center p-8 relative overflow-hidden">
+      {/* Playful background elements */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-purple-200 rounded-full blur-3xl opacity-40 -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-200 rounded-full blur-3xl opacity-40 translate-x-1/2 translate-y-1/2"></div>
 
       <div className="flex flex-col items-center justify-center relative z-10 w-full max-w-sm">
-        {/* Correct Vibrant Logo - Circular outline as requested */}
-        <div className="w-64 h-64 mb-10 flex items-center justify-center float-gentle rounded-full overflow-hidden border-4 border-white shadow-2xl bg-white/20 backdrop-blur-sm">
+        {/* Logo - Removed solid white box, added gentle float only */}
+        <div className="w-64 h-64 mb-10 flex items-center justify-center float-gentle">
           <img
-            src={logoPath}
+            src={logoImage}
             alt="Tooth Kingdom"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain drop-shadow-2xl"
           />
         </div>
 
-        {/* Title - Restored to original position below logo */}
+        {/* Title */}
         <h1 className="text-5xl font-extrabold text-center mb-4 text-gray-900 tracking-tight">
           Tooth Kingdom
           <br />
@@ -44,17 +44,6 @@ export function SplashScreen({ navigateTo }: ScreenProps) {
           Start Adventure
         </button>
       </div>
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.05); }
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 3s ease-in-out infinite;
-        }
-      ` }} />
     </div>
   );
 }

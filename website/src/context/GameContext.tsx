@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-// Types from original App.tsx
 import { UserData } from '../components/screens/types';
+import { useAuth, API_URL } from './AuthContext';
+import { CapacitorHttp, HttpResponse } from '@capacitor/core';
 
 interface GameContextType {
   userData: UserData;
@@ -74,18 +74,14 @@ export const useGame = () => {
   return context;
 };
 
-import { useAuth, API_URL } from './AuthContext';
-
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const { currentUser } = useAuth();
 
-  // Initialize state from localStorage or default
   const [userData, setUserData] = useState<UserData>(() => {
     try {
       const savedData = localStorage.getItem('toothKingdomUserData');
       if (savedData) {
         const parsed = JSON.parse(savedData);
-        // MERGE with defaults to ensure new RPG fields (gold, xp, health) exist for existing users
         return {
           ...defaultUserData,
           ...parsed,
@@ -100,34 +96,29 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
   });
 
-  // Sync with Backend when User Changes (Login/Register)
   useEffect(() => {
     const fetchUserData = async () => {
       if (!currentUser?.uid || currentUser.uid === 'undefined') return;
 
       try {
-        // 1. Try to fetch from Backend
-        const response = await fetch(`${API_URL}/users/${currentUser.uid}`);
-        const data = await response.json();
+        // v5.0 Senior Fix: Use CapacitorHttp for Android Reliability
+        const options = {
+          url: `${API_URL}/users/${currentUser.uid}`,
+          headers: { 'Content-Type': 'application/json' }
+        };
+        const res: HttpResponse = await CapacitorHttp.get(options);
+        const data = res.data;
 
         if (data.success && data.userData) {
           console.log("Loaded userData from Backend:", data.userData);
-          // BUG FIX: Merge with existing state to prevent "undefined" crashes for missing fields
-          setUserData(prev => ({
-            ...prev,
-            ...data.userData,
-            questProgress: { ...(prev.questProgress || {}), ...(data.userData.questProgress || {}) },
-            settings: { ...(prev.settings || {}), ...(data.userData.settings || {}) }
-          }));
+          setUserData(data.userData);
         } else {
-          // 2. If new user (no data in backend yet) but has displayName, update local
           if (currentUser.displayName && userData.name !== currentUser.displayName) {
             setUserData(prev => ({ ...prev, name: currentUser.displayName || 'Champion' }));
           }
         }
       } catch (error) {
         console.warn("Failed to fetch from backend (Offline?), using local data.", error);
-        // Fallback: Update name from Auth if local is default
         if (currentUser.displayName && userData.name === 'Champion') {
           setUserData(prev => ({ ...prev, name: currentUser.displayName || 'Champion' }));
         }
@@ -135,53 +126,74 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     };
 
     fetchUserData();
-  }, [currentUser]); // Run when user logs in/out
+  }, [currentUser]);
 
-  // Save to localStorage AND Backend whenever userData changes
   useEffect(() => {
-    // LocalStorage
     try {
       localStorage.setItem('toothKingdomUserData', JSON.stringify(userData));
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }
 
-    // Backend Sync (Debounced ideally, but direct for now)
     const saveToBackend = async () => {
       if (!currentUser?.uid || currentUser.uid === 'undefined') return;
 
       try {
-        await fetch(`${API_URL}/users/${currentUser.uid}`, {
-          method: 'POST',
+        const options = {
+          url: `${API_URL}/users/${currentUser.uid}`,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+          data: {
             userData: userData,
-            name: userData.name, // Sync top-level fields too
+            name: userData.name,
             email: currentUser.email
-          })
-        });
+          }
+        };
+        await CapacitorHttp.post(options);
       } catch (err) {
         console.warn("Failed to save to backend:", err);
       }
     };
 
-    // Only save if we have a user and it's not the initial default load
     if (currentUser) {
-      const timer = setTimeout(saveToBackend, 1000); // 1s debounce
+      const timer = setTimeout(saveToBackend, 1000);
       return () => clearTimeout(timer);
     }
-
   }, [userData, currentUser]);
 
+  const checkAchievements = (data: UserData): UserData => {
+    const newAchievements = [...data.achievements];
+    let updated = false;
+
+    const addAch = (id: number) => {
+      if (!newAchievements.some(a => a.id === id)) {
+        newAchievements.push({ id, unlockedAt: new Date().toISOString() });
+        updated = true;
+      }
+    };
+
+    if (data.xp > 0) addAch(1);
+    if (data.currentStreak >= 3) addAch(2);
+    if (data.currentStreak >= 7) addAch(6);
+    if (data.totalStars >= 50) addAch(3);
+    if (data.totalStars >= 250) addAch(5);
+    if (data.completedChapters >= 1) addAch(4);
+    if (data.completedChapters >= 3) addAch(8);
+    if (data.level >= 5) addAch(7);
+
+    return updated ? { ...data, achievements: newAchievements } : data;
+  };
+
   const updateUserData = (updates: Partial<UserData>) => {
-    setUserData(prev => ({
-      ...prev,
-      ...updates,
-      // Ensure nested objects like questProgress are also merged if updated
-      questProgress: updates.questProgress ? { ...prev.questProgress, ...updates.questProgress } : prev.questProgress,
-      settings: updates.settings ? { ...prev.settings, ...updates.settings } : prev.settings,
-      notifications: updates.notifications ? updates.notifications : prev.notifications
-    }));
+    setUserData(prev => {
+      const updated = {
+        ...prev,
+        ...updates,
+        questProgress: updates.questProgress ? { ...prev.questProgress, ...updates.questProgress } : prev.questProgress,
+        settings: updates.settings ? { ...prev.settings, ...updates.settings } : prev.settings,
+        notifications: updates.notifications ? updates.notifications : prev.notifications
+      };
+      return checkAchievements(updated);
+    });
   };
 
   const resetProgress = () => {

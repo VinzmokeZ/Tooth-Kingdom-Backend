@@ -65,7 +65,7 @@ export function NotificationsScreen({ navigateTo, userData, updateUserData }: Sc
         {/* Tabs */}
         <div className="flex gap-2">
           <button
-            onClick={() => { setActiveTab('all'); setSelectedNotification(null); }}
+            onClick={() => setActiveTab('all')}
             className={`flex-1 h-10 rounded-xl text-sm font-bold transition-all ${activeTab === 'all'
               ? 'bg-purple-600 text-white shadow-md'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -74,7 +74,7 @@ export function NotificationsScreen({ navigateTo, userData, updateUserData }: Sc
             All
           </button>
           <button
-            onClick={() => { setActiveTab('unread'); setSelectedNotification(null); }}
+            onClick={() => setActiveTab('unread')}
             className={`flex-1 h-10 rounded-xl text-sm font-bold transition-all relative ${activeTab === 'unread'
               ? 'bg-purple-600 text-white shadow-md'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -142,22 +142,20 @@ export function NotificationsScreen({ navigateTo, userData, updateUserData }: Sc
 
       {/* Notification Detail Overlay */}
       {selectedNotification && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-[#FFFFFF] opacity-100 min-h-[300px] w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-[0_32px_128px_-12px_rgba(0,0,0,0.9)] animate-in zoom-in-95 duration-300 border-4 border-white/40 relative z-[10000]">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
             {/* Header / Banner */}
-            <div className={`h-40 bg-white relative overflow-hidden`}>
-              <div className={`absolute inset-0 bg-gradient-to-br ${selectedNotification.color} opacity-100 flex items-center justify-center`}>
-                <button
-                  onClick={() => setSelectedNotification(null)}
-                  className="absolute top-4 left-4 w-10 h-10 bg-black/20 hover:bg-black/30 backdrop-blur rounded-full flex items-center justify-center text-white transition-colors z-10"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                {(() => {
-                  const Icon = getIcon(selectedNotification.iconName);
-                  return <Icon className="w-20 h-20 text-white drop-shadow-2xl relative z-10" />;
-                })()}
-              </div>
+            <div className={`h-32 bg-gradient-to-br ${selectedNotification.color} flex items-center justify-center relative`}>
+              <button
+                onClick={() => setSelectedNotification(null)}
+                className="absolute top-4 left-4 w-10 h-10 bg-black/20 hover:bg-black/30 backdrop-blur rounded-full flex items-center justify-center text-white transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              {(() => {
+                const Icon = getIcon(selectedNotification.iconName);
+                return <Icon className="w-16 h-16 text-white drop-shadow-lg" />;
+              })()}
             </div>
 
             {/* Body */}
@@ -193,9 +191,9 @@ export function NotificationsScreen({ navigateTo, userData, updateUserData }: Sc
                 </button>
                 <button
                   onClick={() => setSelectedNotification(null)}
-                  className="w-full py-4 mt-2 rounded-xl font-black text-gray-400 uppercase tracking-widest text-[10px] hover:bg-gray-50 active:bg-gray-100 transition-all cursor-pointer pointer-events-auto relative z-[10000]"
+                  className="w-full py-4 rounded-xl font-bold text-gray-500 hover:bg-gray-50 transition-colors"
                 >
-                  Close Message
+                  Close
                 </button>
               </div>
             </div>

@@ -9,16 +9,12 @@ export function PhoneFrame({ children }: PhoneFrameProps) {
   const { userData } = useGame();
   const isDarkMode = userData?.settings?.darkMode || false;
 
-  // Detect if we are running in mobile mode to remove borders
-  const isMobileMode = typeof window !== 'undefined' && (
-    (window as any).Capacitor?.isNative || 
-    window.innerWidth < 1024 || 
-    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-  );
+  // Detect if we are running in Capacitor (Native App) to remove borders
+  const isNative = typeof window !== 'undefined' && (window as any).Capacitor?.isNative;
 
-  if (isMobileMode) {
+  if (isNative) {
     return (
-      <div className="w-full h-full flex flex-col bg-white overflow-hidden scroll-smooth relative">
+      <div className="w-full h-full min-h-[100dvh] overflow-hidden bg-white relative">
         {children}
       </div>
     );
@@ -32,7 +28,7 @@ export function PhoneFrame({ children }: PhoneFrameProps) {
       </div>
 
       {/* Screen */}
-      <div className={`relative rounded-[3rem] overflow-hidden w-[375px] h-[812px] flex flex-col transition-all duration-300 ${isDarkMode
+      <div className={`relative rounded-[3rem] overflow-hidden w-[375px] h-[812px] transition-all duration-300 ${isDarkMode
         ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-black'
         : 'bg-white'
         }`}>

@@ -128,12 +128,13 @@ export function TeacherBrushCheckScreen({ navigateTo, userData }: ScreenProps) {
                 </div>
             </div>
 
-            <div className="p-6 bg-white border-t border-blue-50">
+            {/* Submit Bar */}
+            <div className="p-5 bg-white border-t border-gray-100 pb-8">
                 <button
                     onClick={() => navigateTo('teacher-dashboard')}
-                    className="w-full py-4 bg-blue-600 text-white rounded-[1.8rem] font-black tracking-[0.15em] uppercase shadow-xl shadow-blue-500/40 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all flex justify-center items-center gap-3 border-b-4 border-blue-800"
+                    className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-[1.5rem] font-black tracking-widest uppercase shadow-lg shadow-blue-500/30 hover-float active-pop transition-all flex justify-center items-center gap-2"
                 >
-                    <ClipboardList className="w-6 h-6" />
+                    <ClipboardList className="w-5 h-5" />
                     Save Verification
                 </button>
             </div>

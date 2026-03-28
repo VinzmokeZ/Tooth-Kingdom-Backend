@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="color-scheme" content="light only">
+  <title>Unity WebGL Player | CavityMiner</title>
+  <style>
+    /* ── GLOBAL TOUCH FIX: prevent long-press context menus on ALL elements ── */
+    * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    #unity-container {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    #unity-canvas {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain;
+    }
+
+    /* INTEGRATED CONTROLS STYLING */
+    .mobile-controls {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      height: 180px;
+      pointer-events: none;
+      z-index: 100;
+      font-family: sans-serif;
+    }
+
+    @media (max-width: 1024px) {
+      .mobile-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 0 40px 20px 40px;
+      }
+    }
+
+    .dpad-container {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .control-btn {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background: #1e293b;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      box-shadow: 0 4px #020617;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      /* no scroll hijack or long-press menu */
+      -webkit-touch-callout: none;
+      /* no iOS callout */
+      user-select: none;
+    }
+
+    .control-btn:active {
+      box-shadow: 0 0 #020617;
+      transform: translateY(4px);
+      background: #334155;
+    }
+
+    .btn-up {
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .btn-down {
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .btn-left {
+      left: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .btn-right {
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .action-hub {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .secondary-row {
+      display: flex;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 8px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(4px);
+    }
+
+    .action-btn {
+      width: 50px;
+      height: 50px;
+      background: #1e293b;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: 900;
+      font-size: 10px;
+      box-shadow: 0 4px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      line-height: 1;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      /* critical: prevents scroll hijack & long-press */
+      -webkit-touch-callout: none;
+      user-select: none;
+    }
+
+    .action-btn span {
+      font-size: 8px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 2px;
+    }
+
+    .action-btn:active {
+      box-shadow: 0 0 rgba(0, 0, 0, 0.4);
+      transform: translateY(4px);
+    }
+
+    .primary-btn-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-space {
+      width: 70px;
+      height: 70px;
+      background: #2563eb;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      box-shadow: 0 4px #1e40af;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      -webkit-touch-callout: none;
+      user-select: none;
+    }
+
+    .btn-space svg {
+      width: 32px;
+      height: 32px;
+      fill: currentColor;
+    }
+
+    .btn-space:active {
+      box-shadow: 0 0 #1e40af;
+      transform: translateY(4px);
+    }
+
+    .label-text {
+      font-size: 8px;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="unity-container">
+    <canvas id="unity-canvas"></canvas>
+    <div id="unity-loading-bar" style="display: none;">
+      <div id="unity-logo"></div>
+      <div id="unity-progress-bar-empty">
+        <div id="unity-progress-bar-full"></div>
+      </div>
+    </div>
+  </div>
+  <div id="unity-warning"> </div>
+  <div id="unity-footer" style="display: none;">
+    <div id="unity-webgl-logo"></div>
+    <div id="unity-fullscreen-button"></div>
+    <div id="unity-build-title">CavityMiner</div>
+  </div>
+
+  <!-- INTEGRATED MOBILE CONTROLS -->
+  <div class="mobile-controls">
+    <!-- LEFT: D-PAD -->
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <div class="dpad-container">
+        <button class="control-btn btn-up" oncontextmenu="return false" onmousedown="handleKey('ArrowUp', 'keydown')"
+          onmouseup="handleKey('ArrowUp', 'keyup')"
+          ontouchstart="event.preventDefault(); handleKey('ArrowUp', 'keydown');"
+          ontouchend="event.preventDefault(); handleKey('ArrowUp', 'keyup');">▲</button>
+        <button class="control-btn btn-down" oncontextmenu="return false"
+          onmousedown="handleKey('ArrowDown', 'keydown')" onmouseup="handleKey('ArrowDown', 'keyup')"
+          ontouchstart="event.preventDefault(); handleKey('ArrowDown', 'keydown');"
+          ontouchend="event.preventDefault(); handleKey('ArrowDown', 'keyup');">▼</button>
+        <button class="control-btn btn-left" oncontextmenu="return false"
+          onmousedown="handleKey('ArrowLeft', 'keydown')" onmouseup="handleKey('ArrowLeft', 'keyup')"
+          ontouchstart="event.preventDefault(); handleKey('ArrowLeft', 'keydown');"
+          ontouchend="event.preventDefault(); handleKey('ArrowLeft', 'keyup');">◀</button>
+        <button class="control-btn btn-right" oncontextmenu="return false"
+          onmousedown="handleKey('ArrowRight', 'keydown')" onmouseup="handleKey('ArrowRight', 'keyup')"
+          ontouchstart="event.preventDefault(); handleKey('ArrowRight', 'keydown');"
+          ontouchend="event.preventDefault(); handleKey('ArrowRight', 'keyup');">▶</button>
+        <div
+          style="width: 30px; height: 30px; background: rgba(30, 41, 59, 0.5); border-radius: 50%; border: 1px solid rgba(51, 65, 85, 0.3);">
+        </div>
+      </div>
+      <div class="label-text">Move</div>
+    </div>
+
+    <!-- RIGHT: ACTIONS -->
+    <div class="action-hub">
+      <div class="secondary-row">
+        <!-- TAB/F only fire on touchend to prevent ghost-click double-fire -->
+        <button class="action-btn" oncontextmenu="return false" onmousedown="handleKey('Tab', 'keydown')"
+          onmouseup="handleKey('Tab', 'keyup')" ontouchstart="event.preventDefault()"
+          ontouchend="event.preventDefault(); handleKey('Tab', 'keydown'); setTimeout(function(){ handleKey('Tab', 'keyup'); }, 80);">
+          TAB<span>Inv</span></button>
+        <button class="action-btn" oncontextmenu="return false" onmousedown="handleKey('f', 'keydown')"
+          onmouseup="handleKey('f', 'keyup')" ontouchstart="event.preventDefault()"
+          ontouchend="event.preventDefault(); handleKey('f', 'keydown'); setTimeout(function(){ handleKey('f', 'keyup'); }, 80);">
+          F<span>Esc</span></button>
+        <button class="action-btn" oncontextmenu="return false" onmousedown="handleMouse(0, 'mousedown')"
+          onmouseup="handleMouse(0, 'mouseup')" ontouchstart="event.preventDefault(); handleMouse(0, 'mousedown');"
+          ontouchend="event.preventDefault(); handleMouse(0, 'mouseup');">
+          L<span>Dig</span></button>
+        <button class="action-btn" oncontextmenu="return false" onmousedown="handleMouse(2, 'mousedown')"
+          onmouseup="handleMouse(2, 'mouseup')" ontouchstart="event.preventDefault(); handleMouse(2, 'mousedown');"
+          ontouchend="event.preventDefault(); handleMouse(2, 'mouseup');">
+          R<span>Spec</span></button>
+      </div>
+      <div class="primary-btn-container">
+        <button class="btn-space" oncontextmenu="return false" onmousedown="handleKey(' ', 'keydown')"
+          onmouseup="handleKey(' ', 'keyup')" ontouchstart="event.preventDefault(); handleKey(' ', 'keydown');"
+          ontouchend="event.preventDefault(); handleKey(' ', 'keyup');">
+          <svg viewBox="0 0 24 24">
+            <path d="M13 10V3L4 14H11V21L20 10H13Z" />
+          </svg>
+        </button>
+        <div class="label-text" style="color: rgba(255,255,255,0.6); letter-spacing: 1px;">Start / Space</div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    var container = document.querySelector("#unity-container");
+    var canvas = document.querySelector("#unity-canvas");
+    var loadingBar = document.querySelector("#unity-loading-bar");
+    var progressBarFull = document.querySelector("#unity-progress-bar-full");
+    var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+    var warningBanner = document.querySelector("#unity-warning");
+
+    // VIRTUAL KEY EMULATION SCRIPT
+    function handleKey(key, type) {
+      const keyMap = {
+        'ArrowUp': { key: 'ArrowUp', code: 'ArrowUp', keyCode: 38 },
+        'ArrowDown': { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40 },
+        'ArrowLeft': { key: 'ArrowLeft', code: 'ArrowLeft', keyCode: 37 },
+        'ArrowRight': { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39 },
+        ' ': { key: ' ', code: 'Space', keyCode: 32 },
+        'Tab': { key: 'Tab', code: 'Tab', keyCode: 9 },
+        'f': { key: 'f', code: 'KeyF', keyCode: 70 }
+      };
+      const config = keyMap[key] || { key: key, code: key, keyCode: 0 };
+      const event = new KeyboardEvent(type, {
+        key: config.key,
+        code: config.code,
+        keyCode: config.keyCode,
+        which: config.keyCode,
+        bubbles: true,
+        cancelable: true
+      });
+      window.dispatchEvent(event);
+      document.dispatchEvent(event);
+      canvas.dispatchEvent(event);
+    }
+
+    function handleMouse(button, type) {
+      const event = new MouseEvent(type, {
+        button: button,
+        buttons: type === 'mousedown' ? (button === 0 ? 1 : 2) : 0,
+        bubbles: true,
+        cancelable: true
+      });
+      canvas.dispatchEvent(event);
+    }
+
+    function unityShowBanner(msg, type) {
+      function updateBannerVisibility() {
+        warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+      }
+      var div = document.createElement('div');
+      div.innerHTML = msg;
+      warningBanner.appendChild(div);
+      if (type == 'error') div.style = 'background: red; padding: 10px;';
+      else {
+        if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+        setTimeout(function () {
+          warningBanner.removeChild(div);
+          updateBannerVisibility();
+        }, 5000);
+      }
+      updateBannerVisibility();
+    }
+
+    var buildUrl = "Build";
+    var loaderUrl = buildUrl + "/Html_Build.loader.js";
+    var config = {
+      dataUrl: buildUrl + "/Html_Build.data",
+      frameworkUrl: buildUrl + "/Html_Build.framework.js",
+      codeUrl: buildUrl + "/Html_Build.wasm",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "TubClub",
+      productName: "CavityMiner",
+      productVersion: "1.0",
+      showBanner: unityShowBanner,
+      // Rendering Stability for Android WebView
+      devicePixelRatio: 1.5, // Balance quality and performance
+      webglContextAttributes: {
+        alpha: true,
+        depth: true,
+        stencil: true,
+        antialias: false, // Antialiasing often breaks on mobile GPUs
+        premultipliedAlpha: true,
+        preserveDrawingBuffer: true,
+        powerPreference: "high-performance"
+      }
+    };
+
+    // Mobile check
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      var meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+
+    loadingBar.style.display = "block";
+
+    var script = document.createElement("script");
+    script.src = loaderUrl;
+    script.onload = () => {
+      createUnityInstance(canvas, config, (progress) => {
+        progressBarFull.style.width = 100 * progress + "%";
+      }).then((unityInstance) => {
+        loadingBar.style.display = "none";
+        fullscreenButton.onclick = () => {
+          unityInstance.SetFullscreen(1);
+        };
+      }).catch((message) => {
+        alert(message);
+      });
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
+
+</html>

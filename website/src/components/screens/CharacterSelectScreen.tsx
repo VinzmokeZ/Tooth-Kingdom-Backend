@@ -17,6 +17,7 @@ export function CharacterSelectScreen({ navigateTo, userData, updateUserData }: 
 
   return (
     <div className="h-full bg-transparent flex flex-col relative overflow-hidden">
+      <AnimatedBackground />
 
       {/* Header */}
       <div className="p-6 pb-4 relative z-10">

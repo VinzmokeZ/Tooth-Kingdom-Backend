@@ -29,9 +29,6 @@ import { ParentHistoryScreen } from './screens/ParentHistoryScreen';
 import { TeacherStudentDetailScreen } from './screens/TeacherStudentDetailScreen';
 import { TeacherLeaderboardScreen } from './screens/TeacherLeaderboardScreen';
 import { TeacherBrushCheckScreen } from './screens/TeacherBrushCheckScreen';
-import { AttributionsScreen } from './screens/AttributionsScreen';
-import { PrivacyPolicyScreen } from './screens/PrivacyPolicyScreen';
-import { DataDeletionScreen } from './screens/DataDeletionScreen';
 import { UserData } from './screens/types';
 
 interface AppScreensProps {
@@ -41,88 +38,81 @@ interface AppScreensProps {
   updateUserData: (updates: Partial<UserData>) => void;
   selectedStudent?: any;
   setSelectedStudent?: (student: any) => void;
-  isWebPreview?: boolean;
 }
 
-export function AppScreens({ currentScreen, navigateTo, userData, updateUserData, selectedStudent, setSelectedStudent, isWebPreview }: AppScreensProps) {
-  const screenProps = { navigateTo, userData, updateUserData, selectedStudent, setSelectedStudent, isWebPreview };
-
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'signin':
-        return <SignInScreen {...screenProps} />;
-      case 'otp-verification':
-        return <OTPVerificationScreen {...screenProps} />;
-      case 'splash':
-        return <SplashScreen {...screenProps} />;
-      case 'onboarding':
-        return <OnboardingScreen {...screenProps} />;
-      case 'character-select':
-        return <CharacterSelectScreen {...screenProps} />;
-      case 'dashboard':
-        return <DashboardScreen {...screenProps} />;
-      case 'chapters':
-        return <ChaptersScreen {...screenProps} />;
-      case 'brushing-lesson':
-        return <BrushingLessonScreen {...screenProps} />;
-      case 'lesson-complete':
-        return <LessonCompleteScreen {...screenProps} />;
-      case 'reward-unlocked':
-        return <RewardUnlockedScreen {...screenProps} />;
-      case 'rewards':
-        return <RewardsScreen {...screenProps} />;
-      case 'progress':
-        return <ProgressScreen {...screenProps} />;
-      case 'calendar':
-        return <CalendarScreen {...screenProps} />;
-      case 'settings':
-        return <SettingsScreen {...screenProps} />;
-      case 'profile':
-        return <ProfileScreen {...screenProps} />;
-      case 'achievements':
-        return <AchievementsScreen {...screenProps} />;
-      case 'stats':
-        return <StatsScreen {...screenProps} />;
-      case 'notifications':
-        return <NotificationsScreen {...screenProps} />;
-      case 'streak':
-        return <StreakScreen {...screenProps} />;
-      case 'learning-resources':
-        return <LearningResourcesScreen {...screenProps} />;
-      case 'learning-academy':
-        return <LearningAcademyScreen {...screenProps} />;
-      case 'parent-dashboard':
-        return <ParentDashboardScreen {...screenProps} />;
-      case 'teacher-dashboard':
-        return <TeacherDashboardScreen {...screenProps} />;
-      case 'kingdom-bazaar':
-        return <KingdomBazaarScreen {...screenProps} />;
-      case 'rpg-hub':
-        return <RPGKingdomHubScreen {...screenProps} />;
-      case 'parent-streak':
-        return <ParentStreakScreen {...screenProps} />;
-      case 'parent-history':
-        return <ParentHistoryScreen {...screenProps} />;
-      case 'teacher-student-detail':
-        return <TeacherStudentDetailScreen {...screenProps} />;
-      case 'teacher-leaderboard':
-        return <TeacherLeaderboardScreen {...screenProps} />;
-      case 'teacher-brush-check':
-        return <TeacherBrushCheckScreen {...screenProps} />;
-      case 'attributions':
-        return <AttributionsScreen {...screenProps} />;
-      case 'privacy':
-        return <PrivacyPolicyScreen {...screenProps} />;
-      case 'delete-account':
-        return <DataDeletionScreen {...screenProps} />;
-      default:
-        return <SplashScreen {...screenProps} />;
-    }
-  };
+export function AppScreens({ currentScreen, navigateTo, userData, updateUserData, selectedStudent, setSelectedStudent }: AppScreensProps) {
+  const screenProps = { navigateTo, userData, updateUserData, selectedStudent, setSelectedStudent };
 
   return (
-    <div className={`flex-1 h-full w-full flex flex-col overflow-hidden ${isWebPreview ? 'lg:flex-row' : ''}`}>
-      {renderScreen()}
+    <div className="w-full h-full bg-transparent overflow-hidden">
+      <div className="max-w-[1100px] h-full mx-auto relative shadow-[0_0_100px_rgba(0,0,0,0.1)] border-x border-gray-100 dark:border-white/5 overflow-hidden">
+        {(() => {
+          switch (currentScreen) {
+            case 'signin':
+              return <SignInScreen {...screenProps} />;
+            case 'otp-verification':
+              return <OTPVerificationScreen {...screenProps} />;
+            case 'splash':
+              return <SplashScreen {...screenProps} />;
+            case 'onboarding':
+              return <OnboardingScreen {...screenProps} />;
+            case 'character-select':
+              return <CharacterSelectScreen {...screenProps} />;
+            case 'dashboard':
+              return <DashboardScreen {...screenProps} />;
+            case 'chapters':
+              return <ChaptersScreen {...screenProps} />;
+            case 'brushing-lesson':
+              return <BrushingLessonScreen {...screenProps} />;
+            case 'lesson-complete':
+              return <LessonCompleteScreen {...screenProps} />;
+            case 'reward-unlocked':
+              return <RewardUnlockedScreen {...screenProps} />;
+            case 'rewards':
+              return <RewardsScreen {...screenProps} />;
+            case 'progress':
+              return <ProgressScreen {...screenProps} />;
+            case 'calendar':
+              return <CalendarScreen {...screenProps} />;
+            case 'settings':
+              return <SettingsScreen {...screenProps} />;
+            case 'profile':
+              return <ProfileScreen {...screenProps} />;
+            case 'achievements':
+              return <AchievementsScreen {...screenProps} />;
+            case 'stats':
+              return <StatsScreen {...screenProps} />;
+            case 'notifications':
+              return <NotificationsScreen {...screenProps} />;
+            case 'streak':
+              return <StreakScreen {...screenProps} />;
+            case 'learning-resources':
+              return <LearningResourcesScreen {...screenProps} />;
+            case 'learning-academy':
+              return <LearningAcademyScreen {...screenProps} />;
+            case 'parent-dashboard':
+              return <ParentDashboardScreen {...screenProps} />;
+            case 'parent-streak':
+              return <ParentStreakScreen {...screenProps} />;
+            case 'parent-history':
+              return <ParentHistoryScreen {...screenProps} />;
+            case 'teacher-dashboard':
+              return <TeacherDashboardScreen {...screenProps} />;
+            case 'teacher-student-detail':
+              return <TeacherStudentDetailScreen {...screenProps} />;
+            case 'teacher-leaderboard':
+              return <TeacherLeaderboardScreen {...screenProps} />;
+            case 'teacher-brush-check':
+              return <TeacherBrushCheckScreen {...screenProps} />;
+            case 'kingdom-bazaar':
+              return <KingdomBazaarScreen {...screenProps} />;
+            case 'rpg-hub':
+              return <RPGKingdomHubScreen {...screenProps} />;
+            default:
+              return <SplashScreen {...screenProps} />;
+          }
+        })()}
+      </div>
     </div>
   );
 }

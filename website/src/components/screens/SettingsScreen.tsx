@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScreenProps } from './types';
-import { ChevronLeft, ChevronRight, Bell, Globe, Shield, Moon, Volume2, Info, HelpCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bell, Volume2, Shield } from 'lucide-react';
 import { UserAvatar } from '../common/UserAvatar';
 import { useGame } from '../../context/GameContext';
 import { useAuth } from '../../context/AuthContext';
@@ -12,9 +12,14 @@ export function SettingsScreen({ navigateTo }: ScreenProps) {
 
   // Role-aware back navigation: parents/teachers go back to their portal, not the child dashboard
   const handleBack = () => {
-    if (currentUser?.role === 'parent') {
+    // DIAGNOSTIC LOG: This tells us which project is active in Android Studio
+    console.log("[SETTINGS_REPAIR_VERIFY] PROJECT: DESKTOP");
+    const currentRole = currentUser?.role;
+    console.log("[SETTINGS] Navigating back with role:", currentRole);
+    
+    if (currentRole === 'parent') {
       navigateTo('parent-dashboard');
-    } else if (currentUser?.role === 'teacher') {
+    } else if (currentRole === 'teacher') {
       navigateTo('teacher-dashboard');
     } else {
       navigateTo('dashboard');
@@ -31,8 +36,10 @@ export function SettingsScreen({ navigateTo }: ScreenProps) {
     <div className="h-full bg-transparent flex flex-col relative overflow-hidden">
       <AnimatedBackground />
       <div className="sticky top-0 bg-white/80 border-b border-gray-100 px-5 py-4 z-50 flex items-center gap-3 backdrop-blur-md transition-colors relative">
-        <button onClick={handleBack} className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-all relative z-[60] cursor-pointer pointer-events-auto"><ChevronLeft className="w-6 h-6 text-gray-700" /></button>
-        <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Settings</h1>
+        <button onClick={handleBack} className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-all cursor-pointer relative z-[60] pointer-events-auto">
+          <ChevronLeft className="w-6 h-6 text-gray-700" />
+        </button>
+        <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Settings (Desktop)</h1>
       </div>
       <div className="flex-1 overflow-y-auto pb-20 relative z-10 px-5 pt-4">
         <div className="mb-8">
@@ -67,20 +74,6 @@ export function SettingsScreen({ navigateTo }: ScreenProps) {
               </button>
             </div>
           ))}
-
-          {/* Legal & Credits Navigation Button */}
-          <button 
-            onClick={() => navigateTo('attributions')}
-            className="w-full flex items-center justify-between p-4 bg-white/60 backdrop-blur-md rounded-[2rem] shadow-sm border border-white/50 transition-all hover:bg-white/80 active:scale-[0.98] group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center shadow-sm">
-                <Shield className="w-6 h-6" />
-              </div>
-              <span className="font-black text-gray-900 tracking-tight">Legal & Credits</span>
-            </div>
-            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
-          </button>
         </div>
 
         <div className="mt-12 px-2">
